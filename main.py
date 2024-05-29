@@ -1,209 +1,65 @@
-### Importion
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from multiprocessing import Process
+import multiprocessing
+import subprocess
 
-import random
-import pymysql
-import csv
+import questionary
+import atexit
 import time
 
-PAUSE_SEC = random.randrange(1,3)
+import database
+import searcher
 
-### Driver setting
-def driverSetup():
-  options = webdriver.ChromeOptions()
-  # options.add_argument('headless')
-  options.add_argument('window-size=1920x1080')
-  options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
-  options.add_argument("--disable-blink-features=AutomationControlled")
-  
-  driver = webdriver.Remote(
-    command_executor = 'http://127.0.0.1:4444/wd/hub',
-    options = options)
-  
-  return driver
+############### SETUP ###############
 
+def grid_setup():
+    jar_path = "assets/selenium-server-4.20.0.jar"
+    command = ["java", "-jar", jar_path, "standalone"]
+    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    questionary.print("Selenium GRID Server started.", style="fg:ansiblack")
 
-### Scroller
-def scrolltoEndChrome(driver):
-  last_height = driver.execute_script("return document.body.scrollHeight")
+def handle_exit():
+    time.sleep(0.5)
+    questionary.print("Done and Dusted. Bye! 👋", style="fg:ansiblack")
 
-  while True:
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(PAUSE_SEC)
-    new_height = driver.execute_script("return document.body.scrollHeight")
+def process_function(func, items, process_count):
+    with multiprocessing.Pool(process_count) as pool:
+        pool.map(func, items)
 
-    if new_height == last_height:
-      try:
-        time.sleep(PAUSE_SEC)
-        driver.find_element(By.CLASS_NAME, "RVQdVd").click()
-      except:
-        break
-    last_height = new_height
-
-
-def scrolltoEnd(driver):
-  last_height = driver.execute_script("return document.body.scrollHeight")
-
-  while True:
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(PAUSE_SEC)
-    new_height = driver.execute_script("return document.body.scrollHeight")
-
-    if new_height == last_height:
-      break
-    last_height = new_height
-
-
-### GOOGLE Searcher
-def googleSearch(driver, url, cur):
-  searchkey = "site:" + url
-  driver.get("https://www.google.com/")
-
-  time.sleep(PAUSE_SEC)
-  searchfield = driver.find_element(By.XPATH, '//*[@id="APjFqb"]')
-
-  searchfield.send_keys(searchkey)
-  time.sleep(PAUSE_SEC)
-  searchfield.send_keys(Keys.ENTER)
-  
-  scrolltoEndChrome(driver)
-  time.sleep(PAUSE_SEC)
-  resultfield = driver.find_element(By.ID, 'search')
-
-  try:
-    res_title = resultfield.find_elements(By.TAG_NAME, 'h3')
-    res_link = resultfield.find_elements(By.TAG_NAME, 'cite')
-
-    idx = len(res_title)
-    for i in range(idx):
-      res_title_alt = res_title[i].text
-      res_title_alt = res_title_alt.replace("'", "\\'")
-
-      query = "INSERT INTO searchresult VALUES('{0}', '{1}', '{2}', '{3}')".format("Google", url, res_title_alt, res_link[i*2].text)
-      cur.execute(query)
-
-  except Exception as e:
-    print("ERROR:", e)
-
-  resultfield = driver.find_element(By.ID, 'botstuff')
-  try:
-    res_title = resultfield.find_elements(By.TAG_NAME, 'h3')
-    res_link = resultfield.find_elements(By.TAG_NAME, 'cite')
-
-    idx = len(res_title)-2 # <h3 aria_hidden="true">, <h3>다시 시도</h3>
-    for i in range(idx):
-      res_title_alt = res_title[i].text
-      res_title_alt = res_title_alt.replace("'", "\\'")
-
-      query = "INSERT INTO searchresult VALUES('{0}', '{1}', '{2}', '{3}')".format("Google", url, res_title_alt, res_link[i*2].text)
-      cur.execute(query)
-
-  except Exception as e:
-    print("ERROR:", e)
-
-  print("Searching [{0}] from GOOGLE Done.".format(url))
-  
-
-### BING Searcher
-def bingSearch(driver, url, cur):
-  searchkey = "site:" + url
-  driver.get("https://www.bing.com/")
-
-  time.sleep(PAUSE_SEC)
-  searchfield = driver.find_element(By.XPATH, '//*[@id="sb_form_q"]')
-
-  searchfield.send_keys(searchkey)
-  time.sleep(PAUSE_SEC)
-  searchfield.send_keys(Keys.ENTER)
-  
-  while True:
-    scrolltoEnd(driver)
-    time.sleep(PAUSE_SEC)
-
-    resultfield = driver.find_element(By.ID, 'b_results')
-    try:
-      res_title = resultfield.find_elements(By.TAG_NAME, 'h2')
-      res_link = resultfield.find_elements(By.TAG_NAME, 'cite')
-
-      idx = len(res_title)
-      for i in range(idx):
-        res_title_alt = res_title[i].text
-        res_title_alt = res_title_alt.replace("'", "\\'")
-
-        query = "INSERT INTO searchresult VALUES('{0}', '{1}', '{2}', '{3}')".format("Bing", url, res_title_alt, res_link[i].text)
-        cur.execute(query)
-
-    except Exception as e:
-      print("ERROR:", e)
-
-    try:
-      time.sleep(PAUSE_SEC)
-      next_page = driver.find_element(By.CLASS_NAME, 'sw_next')
-      next_page.find_element(By.XPATH, '..').click()
-    except:
-      break
-
-  print("Searching [{0}] from BING Done.".format(url))
-
-
-### Run crawler
-def runCrawler(url_list):
-  ### Driver connect
-  driver = driverSetup()
-  conn = pymysql.connect(host='127.0.0.1', user='root',
-                         password='root', db='searchdb', charset='utf8')
-  cur = conn.cursor()
-
-  ### Search
-  index = 1
-  for url in url_list:
-    print("[{0}]".format(index), end=' ')
-    googleSearch(driver, url, cur)
-
-    print("[{0}]".format(index), end=' ')
-    bingSearch(driver, url, cur)
-
-    conn.commit()
-    index = index + 1
-
-
-### Main
 def main():
-  ### DB connect
-  conn = pymysql.connect(host='127.0.0.1', user='root',
-                         password='root', db='searchdb', charset='utf8')
-  cur = conn.cursor()
+    new_csv = questionary.confirm("Import new URL list?").ask()
+    if new_csv:
+        database.new_csv_list()
 
-  cur.execute("DROP TABLE IF EXISTS searchResult")
-  cur.execute("CREATE TABLE searchResult (se CHAR(6), index_url CHAR(30), title VARCHAR(100), location VARCHAR(100))")
+    google_list = database.create_task_list("Google")
+    bing_list = database.create_task_list("Bing")
 
-  ### Read list
-  url_list = []
-  with open('url_list.csv', 'r') as file:
-    reader = csv.reader(file)
+    questionary.print("List Handling step finished.", style="fg:ansiblack")
+    questionary.press_any_key_to_continue().ask()
 
-    for line in reader:
-      url_list.append(line[0])
+    google_process = multiprocessing.Process(target=process_function, args=(wrapper_google_search, google_list, 2))
+    bing_process = multiprocessing.Process(target=process_function, args=(wrapper_bing_search, bing_list, 4))
 
-  ### Multiprocess
-  processes = []
+    google_process.start()
+    bing_process.start()
 
-  n = 16
-  jobs = [url_list[i*n : (i+1)*n] for i in range((len(url_list) - 1 + n) // n)]
+    google_process.join()
+    bing_process.join()
 
-  for job in jobs:
-    p = Process(target = runCrawler, args = (job, ))
-    processes.append(p)
-    p.start()
+############### WRAPPER ###############
 
-  for p in processes:
-    p.join()
-  
-  conn.close()
+def wrapper_google_search(item):
+    driver = searcher.driver_setup()
+    searcher.google_search(driver, item)
+    driver.quit()
 
+def wrapper_bing_search(item):
+    driver = searcher.driver_setup()
+    searcher.bing_search(driver, item)
+    driver.quit()
+
+############### MAIN ###############
 
 if __name__ == "__main__":
-  main()
+    atexit.register(handle_exit)
+
+    grid_setup()
+    main()
