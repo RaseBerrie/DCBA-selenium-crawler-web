@@ -24,25 +24,52 @@ def process_function(func, items, process_count):
     with multiprocessing.Pool(process_count) as pool:
         pool.map(func, items)
 
+def start_menu():
+    result = questionary.rawselect("What do you want to do?",
+    choices=[
+        "Import new CSV in command line",
+        "Tag files from searched database",
+        "Parse some data from files",
+        "Start searching",
+        "No, nevermind"
+    ]).ask()
+    return result
+
 def main():
-    new_csv = questionary.confirm("Import new URL list?").ask()
-    if new_csv:
-        database.new_csv_list()
+    global menu_result
+    menu_result = start_menu()
 
-    google_list = database.create_task_list("Google")
-    bing_list = database.create_task_list("Bing")
+    while(menu_result != "No, nevermind"):
+        if menu_result == "Import new CSV in command line":
+            database.new_csv_list()
+            menu_result = start_menu()
+            continue
 
-    questionary.print("List Handling step finished.", style="fg:ansiblack")
-    questionary.press_any_key_to_continue().ask()
+        elif menu_result == "Tag files from searched database":
+            print("Not supported yet!")
+            menu_result = start_menu()
+            continue
 
-    google_process = multiprocessing.Process(target=process_function, args=(wrapper_google_search, google_list, 2))
-    bing_process = multiprocessing.Process(target=process_function, args=(wrapper_bing_search, bing_list, 4))
+        elif menu_result == "Parse some data from files":
+            print("Not supported yet!")
+            menu_result = start_menu()
+            continue
 
-    google_process.start()
-    bing_process.start()
+        elif menu_result == "Start searching":
+            google_list = database.create_task_list("Google")
+            bing_list = database.create_task_list("Bing")
 
-    google_process.join()
-    bing_process.join()
+            questionary.print("List Handling step finished.", style="fg:ansiblack")
+            questionary.press_any_key_to_continue().ask()
+
+            google_process = multiprocessing.Process(target=process_function, args=(wrapper_google_search, google_list, 4))
+            bing_process = multiprocessing.Process(target=process_function, args=(wrapper_bing_search, bing_list, 4))
+
+            google_process.start()
+            bing_process.start()
+
+            google_process.join()
+            bing_process.join()
 
 ############### WRAPPER ###############
 
