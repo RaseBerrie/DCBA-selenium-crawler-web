@@ -7,17 +7,39 @@ import pymysql
 import random
 import time
 import os
+import base64
 
 PAUSE_SEC = random.randrange(1,3)
 
 ############### SETUP ###############
 
-def save_to_database(key, title, link, content):
+def save_to_database(se, sd, title, link, content):
   with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
-      query = "INSERT INTO searchresult(search_key, title, url, content) VALUES('{0}', '{1}', '{2}', '{3}')".format(key, title, link, content)
+      query = "INSERT INTO searchresult(se, subdomain, title, url, content) VALUES('{0}', '{1}', '{2}', '{3}', '{4}')".format(se, sd, title, link, content)
       cur.execute(query)
     conn.commit()
+
+def cut_string_including_substring(main_string, substring):
+    index = main_string.find(substring)
+    if index != -1:
+        return main_string[index:]
+    else:
+        return main_string
+
+def add_padding(base64_string):
+    missing_padding = len(base64_string) % 4
+    if missing_padding:
+        base64_string += '=' * (4 - missing_padding)
+    return base64_string
+
+def decode_base64(base64_string):
+    base64_str_padding = add_padding(base64_string)
+    code_bytes = base64_str_padding.encode('ascii')
+    decoded_bytes = base64.b64decode(code_bytes)
+
+    result = decoded_bytes.decode('utf-8')
+    return result
 
 def driver_setup():
   ua_val = random.randint(0,6)
@@ -30,7 +52,7 @@ def driver_setup():
              "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:70.0) Gecko/20100101 Firefox/70.0"]
   options = webdriver.ChromeOptions()
   
-  # options.add_argument('headless')
+  options.add_argument('headless')
   options.add_argument('incognito')
 
   options.add_argument('window-size=1920x1080')
@@ -121,8 +143,10 @@ def google_search(driver, url):
         res_content_alt = res_content_alt.replace("%", "\\%")
       else:
         res_content_alt = None
-        
-      save_to_database(url, res_title_alt, res_link[i], res_content_alt)
+      
+      tmp = res_link[i].split('/')
+      url = tmp[2]
+      save_to_database("G", url, res_title_alt, res_link[i], res_content_alt)
 
   except Exception as e:
     print("[!] ERROR in [{0}]:".format(url), e)
@@ -150,7 +174,9 @@ def google_search(driver, url):
       else:
         res_content_alt = None
 
-      save_to_database(url, res_title_alt, res_link[i], res_content_alt)
+      tmp = res_link[i].split('/')
+      url = tmp[2]
+      save_to_database("G", url, res_title_alt, res_link[i], res_content_alt)
 
   except Exception as e:
     print("[!] ERROR in [{0}]:".format(url), e)
@@ -192,12 +218,28 @@ def bing_search(driver, url):
         res_title_alt = res_title[i]
         res_title_alt = res_title_alt.replace("'", "\\'")
 
-        res_content_alt = res_content[i].text
-        res_content_alt = res_content_alt.replace("'", "\\'")
-        res_content_alt = res_content_alt.replace('"', '\\"')
-        res_content_alt = res_content_alt.replace("%", "\\%")
+        if i < len(res_content):
+          res_content_alt = res_content[i].text
+          res_content_alt = res_content_alt.replace("'", "\\'")
+          res_content_alt = res_content_alt.replace('"', '\\"')
+          res_content_alt = res_content_alt.replace("%", "\\%")
+        else:
+          res_content_alt = None
 
-        save_to_database(url, res_title_alt, res_link[i], res_content_alt)
+        res_link_alt = res_link[i]
+        if "aHR0c" in res_link_alt:
+          if "aHR0cDovL" in res_link_alt:
+            tmp = cut_string_including_substring(res_link_alt, "aHR0cDovL")
+            tmp_b64 = tmp.split('&')[0]
+            res_link_alt = decode_base64(tmp_b64)
+          else:
+            tmp = cut_string_including_substring(res_link_alt, "aHR0cHM6Ly")
+            tmp_b64 = tmp.split('&')[0]
+            res_link_alt = decode_base64(tmp_b64)
+
+        tmp = res_link_alt.split('/')
+        url = tmp[2]
+        save_to_database("B", url, res_title_alt, res_link_alt, res_content_alt)
     except Exception as e:
       print("[!] ERROR in [{0}]:".format(url), e)
       exit()
