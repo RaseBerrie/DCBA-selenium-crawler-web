@@ -14,7 +14,6 @@ def find_sublist_containing_string(nested_list, target):
     return None
 
 def parse_pdf_then_search(url, keyword):
-    url = "https://img.shinhan.com/sbank2016/seol/20211227000000790002LC000030.PDF"
     response = requests.get(url)
     
     pdf_buffer = io.BytesIO(response.content)
@@ -26,4 +25,8 @@ def parse_pdf_then_search(url, keyword):
         if tables:
             result = find_sublist_containing_string(tables, keyword)
             if result:
-                print(result)
+                result = [i for i in result if i]
+                result_string = ", ".join(result)
+                print(result_string)
+                
+parse_pdf_then_search(r'https://img.shinhan.com/sbank2016/seol/20211227000000790002LC000030.PDF', "피보험자")
