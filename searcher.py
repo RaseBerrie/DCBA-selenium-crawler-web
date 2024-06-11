@@ -9,6 +9,9 @@ import time
 import os
 import base64
 
+import logging
+import traceback
+
 PAUSE_SEC = random.randrange(1,3)
 
 ############### SETUP ###############
@@ -16,7 +19,7 @@ PAUSE_SEC = random.randrange(1,3)
 def save_to_database(se, sd, title, link, content):
   with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
-      query = "INSERT INTO searchresult(se, subdomain, title, url, content) VALUES('{0}', '{1}', '{2}', '{3}', '{4}')".format(se, sd, title, link, content)
+      query = "INSERT IGNORE INTO searchresult(se, subdomain, title, url, content) VALUES('{0}', '{1}', '{2}', '{3}', '{4}')".format(se, sd, title, link, content)
       cur.execute(query)
     conn.commit()
 
@@ -27,18 +30,10 @@ def cut_string_including_substring(main_string, substring):
     else:
         return main_string
 
-def add_padding(base64_string):
-    missing_padding = len(base64_string) % 4
-    if missing_padding:
-        base64_string += '=' * (4 - missing_padding)
-    return base64_string
-
-def decode_base64(base64_string):
-    base64_str_padding = add_padding(base64_string)
-    code_bytes = base64_str_padding.encode('ascii')
-    decoded_bytes = base64.b64decode(code_bytes)
-
+def decode_base64(s):
+    decoded_bytes = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
     result = decoded_bytes.decode('utf-8')
+
     return result
 
 def driver_setup():
@@ -95,8 +90,10 @@ def scrolltoend_bing(driver):
 
 ############### SEARCHER ###############
 
-def google_search(driver, url):
-  searchkey = "site:" + url
+def google_search(driver, originalurl):
+  logging.basicConfig(filename='./error.log', level=logging.WARNING, encoding="utf-8")
+
+  searchkey = "site:" + originalurl
   driver.get("https://www.google.com/")
 
   time.sleep(PAUSE_SEC * 3)
@@ -107,6 +104,7 @@ def google_search(driver, url):
     os._exit(1)
   except Exception as e:
     print("[!] ERROR in [{0}]:".format(url), e)
+    logging.error(traceback.format_exc())
     
   searchfield.send_keys(searchkey)
   time.sleep(PAUSE_SEC * 3)
@@ -121,6 +119,7 @@ def google_search(driver, url):
     os._exit(1)
   except Exception as e:
     print("[!] ERROR in [{0}]:".format(url), e)
+    logging.error(traceback.format_exc())
     
   try:
     res_title = resultfield.find_elements(By.TAG_NAME, 'h3')
@@ -142,7 +141,7 @@ def google_search(driver, url):
         res_content_alt = res_content_alt.replace('"', '\\"')
         res_content_alt = res_content_alt.replace("%", "\\%")
       else:
-        res_content_alt = None
+        res_content_alt = ""
       
       tmp = res_link[i].split('/')
       url = tmp[2]
@@ -150,6 +149,7 @@ def google_search(driver, url):
 
   except Exception as e:
     print("[!] ERROR in [{0}]:".format(url), e)
+    logging.error(traceback.format_exc())
 
   resultfield = driver.find_element(By.ID, 'botstuff')
   try:
@@ -172,7 +172,7 @@ def google_search(driver, url):
         res_content_alt = res_content_alt.replace('"', '\\"')
         res_content_alt = res_content_alt.replace("%", "\\%")
       else:
-        res_content_alt = None
+        res_content_alt = ""
 
       tmp = res_link[i].split('/')
       url = tmp[2]
@@ -180,15 +180,18 @@ def google_search(driver, url):
 
   except Exception as e:
     print("[!] ERROR in [{0}]:".format(url), e)
+    logging.error(traceback.format_exc())
 
   with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
-      query = "UPDATE searchKeys SET Google='Y' WHERE search_key='{0}'".format(url)
+      query = "UPDATE searchKeys SET Google='Y' WHERE search_key='{0}'".format(originalurl)
       cur.execute(query)
     conn.commit()
+    print("done!")
 
-def bing_search(driver, url):
-  searchkey = "site:" + url
+def bing_search(driver, originalurl):
+  logging.basicConfig(filename='./error.log', level=logging.WARNING, encoding="utf-8")
+  searchkey = "site:" + originalurl
   driver.get("https://www.bing.com/search")
 
   time.sleep(PAUSE_SEC)
@@ -223,8 +226,13 @@ def bing_search(driver, url):
           res_content_alt = res_content_alt.replace("'", "\\'")
           res_content_alt = res_content_alt.replace('"', '\\"')
           res_content_alt = res_content_alt.replace("%", "\\%")
+
+          index = res_content_alt.find("일 · ")
+          if index > 0:
+            index = index + 3
+            res_content_alt = res_content_alt[index:]
         else:
-          res_content_alt = None
+          res_content_alt = ""
 
         res_link_alt = res_link[i]
         if "aHR0c" in res_link_alt:
@@ -239,10 +247,10 @@ def bing_search(driver, url):
 
         tmp = res_link_alt.split('/')
         url = tmp[2]
-        save_to_database("B", url, res_title_alt, res_link_alt, res_content_alt)
+        save_to_database("B", url, res_title_alt, res_link_alt, res_content_alt[1:])
     except Exception as e:
       print("[!] ERROR in [{0}]:".format(url), e)
-      exit()
+      logging.error(traceback.format_exc())
 
     try:
       time.sleep(PAUSE_SEC)
@@ -253,6 +261,7 @@ def bing_search(driver, url):
 
   with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
-      query = "UPDATE searchKeys SET Bing='Y' WHERE search_key='{0}'".format(url)
+      query = "UPDATE searchKeys SET Bing='Y' WHERE search_key='{0}'".format(originalurl)
       cur.execute(query)
     conn.commit()
+    print("done!")
