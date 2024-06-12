@@ -1,7 +1,7 @@
 ### 검색 결과 테이블
 CREATE TABLE searchResult (
     se CHAR(1) NOT NULL,
-    subdomain CHAR(30) NOT NULL,
+    subdomain VARCHAR(50) NOT NULL,
     title VARCHAR(100) NOT NULL,
     url VARCHAR(500) NOT NULL,
     content TEXT,

@@ -100,10 +100,10 @@ def google_search(driver, originalurl):
   try:
     searchfield = driver.find_element(By.XPATH, '//*[@id="APjFqb"]')
   except NoSuchElementException as e:
-    print("[!] NO SUCH ELEMENT EXCEPTION in [{0}]: Bot detect alert".format(url))
+    print("[!] NO SUCH ELEMENT EXCEPTION in [{0}]: Bot detect alert".format(originalurl))
     os._exit(1)
   except Exception as e:
-    print("[!] ERROR in [{0}]:".format(url), e)
+    print("[!] ERROR in [{0}]:".format(originalurl), e)
     logging.error(traceback.format_exc())
     
   searchfield.send_keys(searchkey)
@@ -115,10 +115,10 @@ def google_search(driver, originalurl):
   try:
     resultfield = driver.find_element(By.ID, 'search')
   except NoSuchElementException as e:
-    print("[!] NO SUCH ELEMENT EXCEPTION in [{0}]: Bot detect alert".format(url))
+    print("[!] NO SUCH ELEMENT EXCEPTION in [{0}]: Bot detect alert".format(originalurl))
     os._exit(1)
   except Exception as e:
-    print("[!] ERROR in [{0}]:".format(url), e)
+    print("[!] ERROR in [{0}]:".format(originalurl), e)
     logging.error(traceback.format_exc())
     
   try:
@@ -148,7 +148,7 @@ def google_search(driver, originalurl):
       save_to_database("G", url, res_title_alt, res_link[i], res_content_alt)
 
   except Exception as e:
-    print("[!] ERROR in [{0}]:".format(url), e)
+    print("[!] ERROR in [{0}]:".format(originalurl), e)
     logging.error(traceback.format_exc())
 
   resultfield = driver.find_element(By.ID, 'botstuff')
@@ -249,7 +249,7 @@ def bing_search(driver, originalurl):
         url = tmp[2]
         save_to_database("B", url, res_title_alt, res_link_alt, res_content_alt[1:])
     except Exception as e:
-      print("[!] ERROR in [{0}]:".format(url), e)
+      print("[!] ERROR in [{0}]:".format(originalurl), e)
       logging.error(traceback.format_exc())
 
     try:
