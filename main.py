@@ -7,6 +7,7 @@ import time
 
 import database
 import searcher
+import urlfining
 
 ############### SETUP ###############
 
@@ -22,13 +23,21 @@ def handle_exit():
 
 def process_function(func, items, process_count):
     chunk_size = len(items) // process_count
+    if chunk_size < 1:
+        chunk_size = 1
+        
     chunks = [items[i * chunk_size:(i + 1) * chunk_size] for i in range(process_count)]
     
+    flag = True
     processes = []
     for chunk in chunks:
-        p = multiprocessing.Process(target=worker_function, args=(func, chunk))
-        processes.append(p)
-        p.start()
+        if flag:
+            p = multiprocessing.Process(target=worker_function, args=(func, chunk))
+            processes.append(p)
+            p.start()
+
+        if len(processes) == process_count:
+            flag = False
 
     for p in processes:
         p.join()
@@ -40,11 +49,11 @@ def worker_function(func, items):
 def start_menu():
     result = questionary.rawselect("What do you want to do?",
     choices=[
+        "EXIT! 🛸",
         "Import new CSV in command line",
-        "Tag files from searched database",
+        "Find ROOT URLs from search results",
         "Parse some data from files",
         "Start searching",
-        "No, nevermind"
     ]).ask()
     return result
 
@@ -52,14 +61,17 @@ def main():
     global menu_result
     menu_result = start_menu()
 
-    while(menu_result != "No, nevermind"):
+    while(menu_result != "EXIT! 🛸"):
         if menu_result == "Import new CSV in command line":
             database.new_csv_list()
             menu_result = start_menu()
             continue
 
-        elif menu_result == "Tag files from searched database":
-            print("Not supported yet!")
+        elif menu_result == "Find ROOT URLs from search results":
+            urlfining.url_fining()
+            urlfining.url_connecting()
+            questionary.print("Process done successfully! 🥰\n", style="fg:ansiblack")
+
             menu_result = start_menu()
             continue
 
@@ -76,20 +88,23 @@ def main():
 
             print("\n[{0}] URLs in GOOGLE search list.".format(len(google_list)))
             print("[{0}] URLs in BING search list.\n".format(len(bing_list)))
-            questionary.confirm("Start searching with this option?").ask()
+            confirm = questionary.confirm("Start searching with this option?").ask()
 
-            #google_process = multiprocessing.Process(target=process_function, args=(wrapper_google_search, google_list, 4))
-            bing_process = multiprocessing.Process(target=process_function, args=(wrapper_bing_search, bing_list, 4))
+            if(confirm) :
+                google_process = multiprocessing.Process(target=process_function, args=(wrapper_google_search, google_list, 4))
+                bing_process = multiprocessing.Process(target=process_function, args=(wrapper_bing_search, bing_list, 4))
 
-            #google_process.start()
-            bing_process.start()
+                google_process.start()
+                bing_process.start()
 
-            #google_process.join()
-            bing_process.join()
+                google_process.join()
+                bing_process.join()
 
-            questionary.print("Process done successfully! 🥰\n", style="fg:ansiblack")
+                questionary.print("Process done successfully! 🥰\n", style="fg:ansiblack")
+
             menu_result = start_menu()
             continue
+
 
 ############### WRAPPER ###############
 
