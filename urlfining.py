@@ -50,6 +50,54 @@ def url_fining():
             tmpstr = ".".join(tmplist)
             print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
+        elif tmp.count('net') == 1:
+            found = tmp.index('net')
+            found = found - 1
+
+            tmplist = tmp[found:]
+            tmpstr = ".".join(tmplist)
+            print("FINED: " + tmpstr + "\n")
+            s.add(tmpstr)
+        elif ((tmp.count('co') == 1) and (tmp.count('uk') == 1)):
+            found = tmp.index('co')
+            found = found - 1
+
+            tmplist = tmp[found:]
+            tmpstr = ".".join(tmplist)
+            print("FINED: " + tmpstr + "\n")
+            s.add(tmpstr)
+        elif tmp.count('ca') == 1:
+            found = tmp.index('ca')
+            found = found - 1
+
+            tmplist = tmp[found:]
+            tmpstr = ".".join(tmplist)
+            print("FINED: " + tmpstr + "\n")
+            s.add(tmpstr)
+        elif tmp.count('uz') == 1:
+            found = tmp.index('uz')
+            found = found - 1
+
+            tmplist = tmp[found:]
+            tmpstr = ".".join(tmplist)
+            print("FINED: " + tmpstr + "\n")
+            s.add(tmpstr)
+        elif ((tmp.count('or') == 1) and (tmp.count('kr') == 1)):
+            found = tmp.index('or')
+            found = found - 1
+
+            tmplist = tmp[found:]
+            tmpstr = ".".join(tmplist)
+            print("FINED: " + tmpstr + "\n")
+            s.add(tmpstr)
+        elif ((tmp.count('co') == 1) and (tmp.count('uk') == 1)):
+            found = tmp.index('co')
+            found = found - 1
+
+            tmplist = tmp[found:]
+            tmpstr = ".".join(tmplist)
+            print("FINED: " + tmpstr + "\n")
+            s.add(tmpstr)
         else:
             print("[### FAILED ###]\n")
             notfoundcount = notfoundcount + 1
@@ -64,31 +112,5 @@ def url_fining():
             with conn.cursor() as cur:
                 cur.execute("INSERT IGNORE INTO rootdomain(root_url) VALUES('{0}')".format(line))
             conn.commit()
-    
-    return 0
-
-def url_connecting():
-    conn = pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4')
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM rootdomain")
-    datas = cur.fetchall()
-    
-    for data in datas:
-        r_id = data[0]
-        r_val = data[1]
-
-        query = "SELECT id FROM searchresult WHERE subdomain LIKE '%{0}%'".format(r_val)
-        cur.execute(query)
-        ids = cur.fetchall()
-
-        for id in ids:
-            sub_id = id[0]
-            query = "INSERT IGNORE INTO conn_domain_result(root_domain_id, search_url_id) VALUES({0}, {1})".format(r_id, sub_id)
-            cur.execute(query)
-
-        conn.commit()
-    
-    cur.close()
-    conn.close()
     
     return 0
