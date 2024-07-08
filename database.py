@@ -27,7 +27,8 @@ def new_csv_list():
                 '''
                 cur.execute(query)
                 for url in url_list:
-                    cur.execute("INSERT IGNORE INTO searchKeys(search_key) VALUES('{0}')".format(url))   
+                    cur.execute("UPDATE searchkeys set google = 'N' WHERE search_key LIKE '{0}'".format(url))                       
+                    # cur.execute("INSERT IGNORE INTO searchKeys(search_key) VALUES('{0}')".format(url))   
             conn.commit()
 
     except Exception as e:
