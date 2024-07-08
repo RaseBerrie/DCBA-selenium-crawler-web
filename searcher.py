@@ -24,17 +24,15 @@ def save_to_database(se, sd, title, link, content):
     conn.commit()
 
 def cut_string_including_substring(main_string, substring):
-    index = main_string.find(substring)
-    if index != -1:
-        return main_string[index:]
-    else:
-        return main_string
+  index = main_string.find(substring)
+  if index != -1:
+    return main_string[index:]
+  else:
+    return main_string
 
 def decode_base64(s):
-    decoded_bytes = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
-    result = decoded_bytes.decode('utf-8')
-
-    return result
+  result = base64.b64decode(s.replace("\_", "/") + '====').decode('utf-8')
+  return result
 
 def driver_setup():
   ua_val = random.randint(0,6)
@@ -235,19 +233,27 @@ def bing_search(driver, originalurl):
           res_content_alt = ""
 
         res_link_alt = res_link[i]
+        res_link_alt = res_link_alt.replace("'", "\\'")
+        res_link_alt = res_link_alt.replace('"', '\\"')
+        res_link_alt = res_link_alt.replace("%", "\\%")
+        res_link_alt = res_link_alt.replace("_", "\\_")
+
         if "aHR0c" in res_link_alt:
-          if "aHR0cDovL" in res_link_alt:
-            tmp = cut_string_including_substring(res_link_alt, "aHR0cDovL")
-            tmp_b64 = tmp.split('&')[0]
+          tmp = cut_string_including_substring(res_link_alt, "aHR0c")
+          tmp_b64 = tmp.split('&')[0]
+          try:
             res_link_alt = decode_base64(tmp_b64)
-          else:
-            tmp = cut_string_including_substring(res_link_alt, "aHR0cHM6Ly")
-            tmp_b64 = tmp.split('&')[0]
-            res_link_alt = decode_base64(tmp_b64)
+          except:
+            print(tmp_b64)
+            os._exit(1)
 
         tmp = res_link_alt.split('/')
         url = tmp[2]
-        save_to_database("B", url, res_title_alt, res_link_alt, res_content_alt[1:])
+        
+        try:
+          save_to_database("B", url, res_title_alt, res_link_alt, res_content_alt[1:])
+        except Exception as e:
+          print("[!] ERROR in [{0}]:".format(res_link_alt), e)
     except Exception as e:
       print("[!] ERROR in [{0}]:".format(originalurl), e)
       logging.error(traceback.format_exc())
