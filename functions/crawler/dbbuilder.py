@@ -78,9 +78,12 @@ def dbbuild():
     cur.close()
     conn.close()
 
-# conn = pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4')
-# cur = conn.cursor()
-# update_filelist_set_title(cur)
-# conn.commit()
-# cur.close()
-# conn.close()
+def dbbuild_root():
+    conn = pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4')
+    cur = conn.cursor()
+    conn_root_res(cur)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+dbbuild_root()

@@ -1,0 +1,73 @@
+<div class="nav-container">
+  <div class="nav-tabs">
+
+    <div class="dropdown" id="drop-btn-1">
+      <button class="nav-tab btn dropdown-toggle" data-bs-toggle="dropdown">
+        <span id="drop-1">전체</span>
+      </button>
+      <ul class="dropdown-menu" id="first-level-menu"></ul>
+    </div>
+
+    <div class="dropdown" id="drop-btn-2">
+      <button class="nav-tab btn dropdown-toggle" data-bs-toggle="dropdown">
+        <span id="drop-2">루트 도메인</span>
+      </button>
+      <ul class="dropdown-menu" id="second-level-menu" style="overflow: auto; max-height: 50vh;">
+        <li class="dropdown-item">
+          <a class="link-secondary link-underline-opacity-0" href="#" style="pointer-events: none;">회사명을 먼저 선택하세요.</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="dropdown" id="drop-btn-3">
+      <button class="nav-tab btn dropdown-toggle" data-bs-toggle="dropdown">
+        <span id="drop-3">서브 도메인</span>
+      </button>
+      <ul class="dropdown-menu" id="third-level-menu" style="overflow: auto; max-height: 50vh;">
+        <li class="dropdown-item">
+          <a class="link-secondary link-underline-opacity-0" href="#" style="pointer-events: none;">루트 도메인을 먼저 선택하세요.</a>
+        </li>
+      </ul>
+    </div>
+  
+  </div>
+</div>
+
+<script>
+$(function() {
+  cookieControl();
+  $.get("/firstlevel", function(data) {
+    $('#first-level-menu').html(data);
+    topMenu();
+  })
+})
+
+function cookieControl() {
+  if ($.cookie('topMenu') === undefined) {
+    var cookie = {"comp": [0, "전체"], "root": [0, "루트 도메인"], "sub": [0, "서브 도메인"]};
+    $.cookie("topMenu", JSON.stringify(cookie), { expires: 10/1440 });
+  }
+
+  cookie = JSON.parse($.cookie("topMenu"));
+  $('#drop-1').text(cookie.comp[1]);
+  $('#drop-2').text(cookie.root[1]);
+  $('#drop-3').text(cookie.sub[1]);
+
+  firstLevel(cookie.comp[0]);
+  secondLevel(cookie.root[0]);
+}
+
+function firstLevel(categoryId) {
+  $.get("/secondlevel/" + categoryId, function(data) {
+    $('#second-level-menu').html(data);
+    topMenu();
+  })
+}
+
+function secondLevel(categoryId) {
+  $.get("/thirdlevel/" + categoryId, function(data) {
+    $('#third-level-menu').html(data);
+    topMenu();
+  })
+}
+</script>
