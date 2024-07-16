@@ -1,0 +1,10 @@
+<li class="dropdown-menu" style="overflow: auto; max-height: 50vh;">
+    <li><a class="dropdown-item" href="#" value="0">전체</a></li>
+    <li><hr class="dropdown-divider"></li>
+    
+    {% for category in categories %}
+    <li><a class="dropdown-item" href="#" onclick="firstLevel('{{ category[0] }}');" value="{{ category[0] }}">
+        {{ category[1] }}
+    </a></li>
+    {% endfor %}
+</li>

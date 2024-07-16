@@ -13,15 +13,26 @@ import logging
 import traceback
 
 PAUSE_SEC = random.randrange(1,3)
+def ERROR_CONTROL(originalurl, e, isexit=False):
+  if isexit:
+    print("[!] NO SUCH ELEMENT EXCEPTION in [{0}]: Bot detect alert".format(originalurl))
+    os._exit(1)
+  else:
+    print("[!] ERROR in [{0}]:".format(originalurl), e)
+    logging.error(traceback.format_exc())
 
 ############### SETUP ###############
 
-def save_to_database(se, sd, title, link, content):
-  with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
-    with conn.cursor() as cur:
-      query = "INSERT IGNORE INTO searchresult(se, subdomain, title, url, content) VALUES('{0}', '{1}', '{2}', '{3}', '{4}')".format(se, sd, title, link, content)
-      cur.execute(query)
-    conn.commit()
+def save_to_database(se, sd, title, link, content, target):
+  if not "bing.com" in link:
+    with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
+      with conn.cursor() as cur:
+        query = "INSERT IGNORE INTO searchresult(se, subdomain, title, url, content, tags) VALUES('{0}', '{1}', '{2}', '{3}', '{4}',".format(se, sd, title, link, content)
+        if target == "github": query = query + " 'is_github');"
+        else: query = query + " '');"
+
+        cur.execute(query)
+      conn.commit()
 
 def cut_string_including_substring(main_string, substring):
   index = main_string.find(substring)
@@ -88,98 +99,98 @@ def scrolltoend_bing(driver):
 
 ############### SEARCHER ###############
 
-def google_search(driver, originalurl):
+def google_search(driver, originalurl, target="default"):
   logging.basicConfig(filename='./error.log', level=logging.WARNING, encoding="utf-8")
 
-  searchkey = "site:" + originalurl
-  driver.get("https://www.google.com/")
+  # 깃허브 검색 여부 설정
+  if target == "github": searchkey = "site:github.com" + originalurl
+  else: searchkey = "site:" + originalurl
 
+  driver.get("https://www.google.com/")
   time.sleep(PAUSE_SEC * 3)
-  try:
-    searchfield = driver.find_element(By.XPATH, '//*[@id="APjFqb"]')
-  except NoSuchElementException as e:
-    print("[!] NO SUCH ELEMENT EXCEPTION in [{0}]: Bot detect alert".format(originalurl))
-    os._exit(1)
-  except Exception as e:
-    print("[!] ERROR in [{0}]:".format(originalurl), e)
-    logging.error(traceback.format_exc())
-    
+
+  # 캡챠 발생 시 탈출
+  try: searchfield = driver.find_element(By.XPATH, '//*[@id="APjFqb"]')
+  except NoSuchElementException as e: ERROR_CONTROL(originalurl, e, isexit=True)
+  except Exception as e: ERROR_CONTROL(originalurl, e)
+  
+  # 검색어 전송 후 검색 진행
   searchfield.send_keys(searchkey)
   time.sleep(PAUSE_SEC * 3)
   searchfield.send_keys(Keys.ENTER)
   
   scrolltoend_chrome(driver)
   time.sleep(PAUSE_SEC * 3)
-  try:
-    resultfield = driver.find_element(By.ID, 'search')
-  except NoSuchElementException as e:
-    print("[!] NO SUCH ELEMENT EXCEPTION in [{0}]: Bot detect alert".format(originalurl))
-    os._exit(1)
-  except Exception as e:
-    print("[!] ERROR in [{0}]:".format(originalurl), e)
-    logging.error(traceback.format_exc())
+
+  while True:
+    # 캡챠 발생 시 탈출
+    try: resultfield = driver.find_element(By.ID, 'search')
+    except NoSuchElementException as e: ERROR_CONTROL(originalurl, e, isexit=True)
+    except Exception as e: ERROR_CONTROL(originalurl, e)
     
-  try:
-    res_title = resultfield.find_elements(By.TAG_NAME, 'h3')
-    res_content = resultfield.find_elements(By.CLASS_NAME, 'VwiC3b.yXK7lf.lVm3ye.r025kc.hJNv6b.Hdw6tb')
+    # search 안에서 검색
+    try:
+      res_title = resultfield.find_elements(By.TAG_NAME, 'h3')
+      res_content = resultfield.find_elements(By.CLASS_NAME, 'VwiC3b.yXK7lf.lVm3ye.r025kc.hJNv6b.Hdw6tb')
 
-    res_link = []
-    for titlefield in res_title:
-      linkpath = titlefield.find_element(By.XPATH, '..')
-      res_link.append(linkpath.get_attribute('href'))
+      res_link = []
+      for titlefield in res_title:
+        linkpath = titlefield.find_element(By.XPATH, '..')
+        res_link.append(linkpath.get_attribute('href'))
 
-    idx = len(res_title)
-    for i in range(idx):
-      res_title_alt = res_title[i].text
-      res_title_alt = res_title_alt.replace("'", "\\'")
+      idx = len(res_title)
+      for i in range(idx):
+        res_title_alt = res_title[i].text
+        res_title_alt = res_title_alt.replace("'", "\\'")
 
-      if i < len(res_content):
-        res_content_alt = res_content[i].text
-        res_content_alt = res_content_alt.replace("'", "\\'")
-        res_content_alt = res_content_alt.replace('"', '\\"')
-        res_content_alt = res_content_alt.replace("%", "\\%")
-      else:
-        res_content_alt = ""
-      
-      tmp = res_link[i].split('/')
-      url = tmp[2]
-      save_to_database("G", url, res_title_alt, res_link[i], res_content_alt)
+        if i < len(res_content):
+          res_content_alt = res_content[i].text
+          res_content_alt = res_content_alt.replace("'", "\\'")
+          res_content_alt = res_content_alt.replace('"', '\\"')
+          res_content_alt = res_content_alt.replace("%", "\\%")
+        else:
+          res_content_alt = ""
+        
+        tmp = res_link[i].split('/')
+        url = tmp[2]
+        save_to_database("G", url, res_title_alt, res_link[i], res_content_alt, target)
+    except Exception as e: ERROR_CONTROL(originalurl, e)
 
-  except Exception as e:
-    print("[!] ERROR in [{0}]:".format(originalurl), e)
-    logging.error(traceback.format_exc())
+    # botstuff 안에서 검색
+    resultfield = driver.find_element(By.ID, 'botstuff')
+    try:
+      res_title = resultfield.find_elements(By.TAG_NAME, 'h3')
+      res_content = resultfield.find_elements(By.CLASS_NAME, 'VwiC3b.yXK7lf.lVm3ye.r025kc.hJNv6b.Hdw6tb')
 
-  resultfield = driver.find_element(By.ID, 'botstuff')
-  try:
-    res_title = resultfield.find_elements(By.TAG_NAME, 'h3')
-    res_content = resultfield.find_elements(By.CLASS_NAME, 'VwiC3b.yXK7lf.lVm3ye.r025kc.hJNv6b.Hdw6tb')
+      res_link = []
+      for titlefield in res_title:
+        linkpath = titlefield.find_element(By.XPATH, '..')
+        res_link.append(linkpath.get_attribute('href'))
 
-    res_link = []
-    for titlefield in res_title:
-      linkpath = titlefield.find_element(By.XPATH, '..')
-      res_link.append(linkpath.get_attribute('href'))
+      idx = len(res_title)-2 # <h3 aria_hidden="true">, <h3>다시 시도</h3>
+      for i in range(idx):
+        res_title_alt = res_title[i].text
+        res_title_alt = res_title_alt.replace("'", "\\'")
 
-    idx = len(res_title)-2 # <h3 aria_hidden="true">, <h3>다시 시도</h3>
-    for i in range(idx):
-      res_title_alt = res_title[i].text
-      res_title_alt = res_title_alt.replace("'", "\\'")
+        if i < len(res_content):
+          res_content_alt = res_content[i].text
+          res_content_alt = res_content_alt.replace("'", "\\'")
+          res_content_alt = res_content_alt.replace('"', '\\"')
+          res_content_alt = res_content_alt.replace("%", "\\%")
+        else:
+          res_content_alt = ""
 
-      if i < len(res_content):
-        res_content_alt = res_content[i].text
-        res_content_alt = res_content_alt.replace("'", "\\'")
-        res_content_alt = res_content_alt.replace('"', '\\"')
-        res_content_alt = res_content_alt.replace("%", "\\%")
-      else:
-        res_content_alt = ""
+        tmp = res_link[i].split('/')
+        url = tmp[2]
+        save_to_database("G", url, res_title_alt, res_link[i], res_content_alt, target)
+    except Exception as e: ERROR_CONTROL(originalurl, e)
 
-      tmp = res_link[i].split('/')
-      url = tmp[2]
-      save_to_database("G", url, res_title_alt, res_link[i], res_content_alt)
+    # 다음 페이지가 있으면 클릭
+    time.sleep(PAUSE_SEC)
+    try: driver.find_element(By.ID, 'pnnext').click()
+    except: break
 
-  except Exception as e:
-    print("[!] ERROR in [{0}]:".format(url), e)
-    logging.error(traceback.format_exc())
-
+  # 데이터베이스에 커밋
   with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
       query = "UPDATE searchKeys SET Google='Y' WHERE search_key='{0}'".format(originalurl)
@@ -187,9 +198,13 @@ def google_search(driver, originalurl):
     conn.commit()
     print("done!")
 
-def bing_search(driver, originalurl):
+def bing_search(driver, originalurl, target="default"):
   logging.basicConfig(filename='./error.log', level=logging.WARNING, encoding="utf-8")
-  searchkey = "site:" + originalurl
+  searchkey = ''
+
+  if target == "github": searchkey = "site:github.com " + originalurl
+  else: searchkey = "site:" + originalurl
+
   driver.get("https://www.bing.com/search")
 
   time.sleep(PAUSE_SEC)
@@ -241,29 +256,20 @@ def bing_search(driver, originalurl):
         if "aHR0c" in res_link_alt:
           tmp = cut_string_including_substring(res_link_alt, "aHR0c")
           tmp_b64 = tmp.split('&')[0]
-          try:
-            res_link_alt = decode_base64(tmp_b64)
-          except:
-            print(tmp_b64)
-            os._exit(1)
+          try: res_link_alt = decode_base64(tmp_b64)
+          except Exception as e: ERROR_CONTROL(tmp_b64, e, isexit=True)
 
         tmp = res_link_alt.split('/')
-        url = tmp[2]
-        
-        try:
-          save_to_database("B", url, res_title_alt, res_link_alt, res_content_alt[1:])
-        except Exception as e:
-          print("[!] ERROR in [{0}]:".format(res_link_alt), e)
-    except Exception as e:
-      print("[!] ERROR in [{0}]:".format(originalurl), e)
-      logging.error(traceback.format_exc())
+        if target == "github": url = originalurl
+        else: url = tmp[2]
 
-    try:
-      time.sleep(PAUSE_SEC)
-      next_page = driver.find_element(By.CLASS_NAME, 'sw_next')
-      next_page.find_element(By.XPATH, '..').click()
-    except:
-      break
+        try: save_to_database("B", url, res_title_alt, res_link_alt, res_content_alt[1:], target)
+        except Exception as e: ERROR_CONTROL(res_link_alt, e)
+    except Exception as e: ERROR_CONTROL(originalurl, e)
+
+    time.sleep(PAUSE_SEC)
+    try: driver.find_element(By.CLASS_NAME, 'sw_next').find_element(By.XPATH, '..').click()
+    except: break
 
   with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
