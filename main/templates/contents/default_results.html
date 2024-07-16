@@ -1,0 +1,38 @@
+{% for data in datas %}
+<tr>
+    <td style="word-break: keep-all !important; overflow: hidden;">
+        <span class="badge rounded-pill text-bg-secondary" style="pointer-events: none;">{{ data[0] }}</span> {{ data[1] }} 
+    </td>
+    <td>
+        {{ data[2] }}
+        <span id="count-result" style="display: none;">{{ count }}</span>    
+    </td>
+    <td>
+        {% if data[3]|length > 30 %}
+        <a href="{{ data[3] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
+            {{ data[3][:40] }}…
+        </a>
+        
+        {% else %}
+        <a href="{{ data[3] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
+            {{ data[3] }}
+        </a>
+        
+        {% endif %}
+    </td>
+    <td>
+        {% if data[4]|length > 40 %}
+        <div class="show-less">
+            {{ data[4][:40] }}…
+            <span class="see-more badge text-bg-secondary" style="cursor: pointer;">더보기</span>
+        </div>
+        <div class="show-more" style="display:none">
+            {{ data[4] }}
+            <span class="see-less badge text-bg-secondary" style="cursor: pointer;">접기</span>
+        </div>
+
+        {% else %} {{ data[4][:40] }}
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}

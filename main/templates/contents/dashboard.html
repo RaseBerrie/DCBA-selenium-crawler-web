@@ -1,0 +1,40 @@
+{% extends "index.html" %}
+{% block content %}
+
+<style>
+.content-wrapper {
+    max-width: 1024px;
+    width: 95%;
+    justify-self: center;
+}
+</style>
+
+<div class="top-container">
+    <span class="top-title">대시보드</span>
+</div>
+
+<div class="body-container dashboard">
+    <div class="cardboard largecard">
+        <h3>식별된 전체 자산 수</h3>
+        <canvas id="bar-chart" width="100"></canvas>
+    </div>
+    <div class="cardboard">
+        <p>모든 국민은 학문과 예술의 자유를 가진다. 대통령은 헌법과 법률이 정하는 바에 의하여 국군을 통수한다. 대한민국은 통일을 지향하며, 자유민주적 기본질서에 입각한 평화적 통일 정책을 수립하고 이를 추진한다.</p>
+        <p>공공필요에 의한 재산권의 수용·사용 또는 제한 및 그에 대한 보상은 법률로써 하되, 정당한 보상을 지급하여야 한다. 국군은 국가의 안전보장과 국토방위의 신성한 의무를 수행함을 사명으로 하며, 그 정치적 중립성은 준수된다.</p>
+    </div>
+    <div class="cardboard" style="grid-row: 2 /span 2">
+        <p>모든 국민은 학문과 예술의 자유를 가진다. 대통령은 헌법과 법률이 정하는 바에 의하여 국군을 통수한다. 대한민국은 통일을 지향하며, 자유민주적 기본질서에 입각한 평화적 통일 정책을 수립하고 이를 추진한다.</p>
+        <p>공공필요에 의한 재산권의 수용·사용 또는 제한 및 그에 대한 보상은 법률로써 하되, 정당한 보상을 지급하여야 한다. 국군은 국가의 안전보장과 국토방위의 신성한 의무를 수행함을 사명으로 하며, 그 정치적 중립성은 준수된다.</p>
+    </div>
+    <div class="cardboard">
+        <p>모든 국민은 학문과 예술의 자유를 가진다. 대통령은 헌법과 법률이 정하는 바에 의하여 국군을 통수한다. 대한민국은 통일을 지향하며, 자유민주적 기본질서에 입각한 평화적 통일 정책을 수립하고 이를 추진한다.</p>
+        <p>공공필요에 의한 재산권의 수용·사용 또는 제한 및 그에 대한 보상은 법률로써 하되, 정당한 보상을 지급하여야 한다. 국군은 국가의 안전보장과 국토방위의 신성한 의무를 수행함을 사명으로 하며, 그 정치적 중립성은 준수된다.</p>
+    </div>
+</div>
+
+<script>
+  $("#dashboard").addClass("selected");
+  $(".nav-tabs").hide();
+  loadDashBoard();
+</script>
+{% endblock %}

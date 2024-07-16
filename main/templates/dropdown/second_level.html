@@ -1,0 +1,10 @@
+  <li><a class="dropdown-item" href="#" value="0">전체</a></li>
+  {% if categories|length > 0 %}
+  <li><hr class="dropdown-divider"></li>
+  {% endif %}
+
+  {% for category in categories %}
+  <li><a class="dropdown-item" href="#" onclick="secondLevel('{{ category[0] }}');" value="{{ category[0] }}">
+    {{ category[1] }}
+  </a></li>
+  {% endfor %}

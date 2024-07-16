@@ -1,0 +1,20 @@
+{% if not processing %}
+{% extends "crawler_index.html" %}
+{% endif %}
+
+{% block tab_one %}
+
+<button id="finish-crawl" class="btn btn-outline-danger">
+    프로그램 종료
+</button>
+
+<script>
+$("#finish-crawl").on("click", function() {
+    $.get("/crawler/finish", function(data) {
+        $("#crawler").empty();
+        $("#crawler").append(data);
+    });
+});
+</script>
+
+{% endblock %}

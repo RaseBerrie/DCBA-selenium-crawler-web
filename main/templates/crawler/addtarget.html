@@ -1,0 +1,59 @@
+
+
+<div class="input-group">
+    <span class="input-group-text">회사명</span>
+    <input type="text" id="comp" class="form-control" placeholder="회사명 입력" required>
+</div>
+<br>
+<div class="input-group">
+    <span class="input-group-text">CSV 파일 업로드</span>
+    <input type="file" accept="text/csv" class="form-control">
+    <button class="btn btn-outline-secondary" type="submit" id="fileupload">
+        업로드
+    </button>
+</div>
+<div class="input-group">
+    <span class="input-group-text">도메인 네임</span>
+    <textarea class="form-control" placeholder="도메인 네임 입력 (엔터로 구분)"></textarea>
+    <button class="btn btn-outline-secondary" type="submit" id="textupload">
+        업로드
+    </button>
+</div>
+
+<script>
+$('#fileupload').on('click', function(event) {
+    event.preventDefault();
+    
+    data = $(this).siblings('.form-control')[0].files[0];
+    comp = $('#comp').val();
+
+    $(this).siblings('.form-control').val('')
+    
+    let form = new FormData();
+    form.append('comp', comp);
+    form.append('data', data);
+
+    $.ajax({
+        url: '/crawler/addlinks',
+        type: 'POST',
+        data: form,
+        processData: false,
+        contentType: false,
+        success: function(data) {
+            $('#addtarget').append(data);
+        }
+    });
+});
+
+$('#textupload').on('click', function(event) {
+    event.preventDefault();
+    
+    data = $(this).siblings('.form-control').val();
+    comp = $('#comp').val();
+
+    $(this).siblings('.form-control').val('');
+    $.get("/crawler/addlinks", processData=false, { comp: comp, data: data }, function(data) {
+            $('#addtarget').append(data);
+        });
+});
+</script>

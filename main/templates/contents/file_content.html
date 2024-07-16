@@ -1,0 +1,109 @@
+{% extends "index.html" %}
+{% block content %}
+
+<div class="top-container">
+    <div class="top-align-box">
+        <button class="btn btn-primary border border-light-subtle" id="download">
+            CSV 다운로드
+        </button>
+        <div class="btn-group border border-light-subtle" role="group">
+            <button class="btn btn-light border-light-subtle tags">PDF</button>
+            <button class="btn btn-light border-start border-light-subtle tags">XLSX</button>
+            <button class="btn btn-light border-start border-light-subtle tags">PPTX</button>
+            <button class="btn btn-light border-start border-light-subtle tags">DOCX</button>
+            <button class="btn btn-light border-start border-light-subtle tags">기타</button>
+        </div>
+    </div>
+    <div class="top-align-box">
+        <form id="searchForm">
+            <div class="input-group">
+                <button type="button" class="btn btn-light dropdown-toggle border border-light-subtle" data-bs-toggle="dropdown">
+                    <span id="search-concept">파일 이름</span>
+                </button>
+                <ul class="dropdown-menu scrollable-dropdown">
+                    <li><a href="#">파일 이름</a></li>
+                    <li><a href="#">주요 데이터</a></li>
+                </ul>
+                <input type="hidden" name="search-param" id="search-param" value="파일 이름">
+                <input type="text" class="form-control border border-light-subtle" id="searchInput" placeholder="Search">
+                <button class="btn btn-light border border-light-subtle" id="submitButton" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="body-container">
+<div class="top-align-box">
+    <div class="top-total">
+        검색 결과: <strong></strong>개
+    </div>
+</div>
+
+<table class="table table-hover" style="table-layout: fixed; word-break: break-all;">
+    <thead class="table table-dark">
+        <tr>
+            <th style="width: 4%; text-align: center;">타입</th>
+            <th>파일 이름</th>
+            <th>주요 데이터</th>
+        </tr>
+    </thead>
+    <tbody id="results"></tbody>
+</table>
+</div>
+
+<div class="d-flex justify-content-center">
+    <div id="loading" class="spinner-border" style="display: none; margin-top: 1rem;"></div>
+</div>
+</div>
+
+<script>
+var page = 1;
+var pagename = "/fileparses";
+$('#' + pagename.substr(1)).addClass("selected");
+
+var loading = false;
+var endofdata = false;
+var queryed = false;
+
+loadInitiateResults(true, pagename);
+downloadButton(pagename);
+
+$('#searchForm').on('submit', function(event) {
+    event.preventDefault();
+    $('#results').empty();
+
+    page = 1;
+    queryed = true;
+    loadResults(true, pagename);
+});
+
+$('.tags').on('click', function(event) {
+    event.preventDefault();
+    $('#results').empty();
+
+    $(this).addClass('active').siblings().removeClass('active');
+
+    page = 1;
+    if (queryed) loadResults(true, pagename);
+    else loadInitiateResults(true, pagename);
+});
+
+$(window).scroll(function() {
+    var total = Number($('.top-total strong').text())
+
+    // total = 211일 때 나머지 = 1, page = 8까지 로드 후 page = 9 로드 전에 정지
+    // total = 210일 때 나머지 = 0, page = 7까지 로드 후 page = 8 로드 전에 정지
+    if (page % total != 0 && page > parseInt(total / 30) + 1) endofdata = true;
+    else if (page % total === 0 && page === parseInt(total / 30) + 1) endofdata = true;
+
+    if ($(window).scrollTop() + $(window).height() >= $(document).height() && !endofdata) {
+        if (queryed) loadResults(false, pagename);
+        else loadInitiateResults(false, pagename);
+    }
+});
+</script>
+</div>
+
+{% endblock %}
