@@ -1,0 +1,20 @@
+{% if not processing %}
+{% extends "crawler_index.html" %}
+{% endif %}
+
+{% block crawler_html %}
+
+{{ data }}
+
+<button id="restart" class="btn btn-outline-secondary">
+    처음으로
+</button>
+
+<script>
+$("#restart").on("click", function() {
+    $.removeCookie('pid', { path: '/' });
+    location.reload();
+});
+</script>
+
+{% endblock %}

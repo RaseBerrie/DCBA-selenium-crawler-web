@@ -26,25 +26,33 @@ def parse_date(date):
     return formatted_date
 
 def pdf_settitle(cur):
-    cur.execute("SELECT * FROM filelist WHERE title='notitle'")
+    cur.execute("SELECT url FROM list_file WHERE title is null or title = '' or title = 'notitle' or title = 'untitled' or title like '%무제%'")
     datas = cur.fetchall()
 
     for data in datas:
-        url = data[3]
+        url = data[0]
         pretitle = url.split("/")[-1]
 
-        if '\\' in pretitle: pretitle.replace("\\", "") #백슬래시 삭제
+        pretitle = pretitle.replace("\\", "") #백슬래시 삭제
         pretitle = parse.unquote(pretitle) #URL 인코딩 해제
         
         if "filename=" in pretitle:
             title = pretitle.split("filename=", 1)[1]
+        elif "dnfile=" in pretitle:
+            title = pretitle.split("dnfile=", 1)[1]
         else:
             title = pretitle
 
-        query = f"UPDATE filelist SET title = '%s' WHERE url = '%s';" % (title.replace("+", " "), url)
+        if "_" in title:
+            title = title.split("_", 1)[1]
+
+        query = f'UPDATE list_file SET title = "%s" WHERE url = "%s";' % (title.replace("+", " "), url)
+
         try:
             cur.execute(query)
-        except:
+        except Exception as e:
+            print(e)
+            print(query)
             continue
 
 def find_pdf_metadata(url):
@@ -54,9 +62,9 @@ def find_pdf_metadata(url):
 
     metadata = pdf.metadata
     date = metadata["ModDate"]
+    title = metadata["Title"]
 
-    return parse_date(date)
-
+    return parse_date(date), title
 
 def find_sublist(nested_list, target):
     # 재귀적으로 모든 단계의 중첩 리스트를 탐색
@@ -96,18 +104,23 @@ def pdf_parse_search(url, keyword):
 
 with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
-        query = "select url, id from filelist where filetype = 'pdf' and moddate is null"
-        cur.execute(query)
+        # query = "select url, id from list_file where filetype = 'pdf' and moddate is null"
+        # cur.execute(query)
 
-        datas = cur.fetchall()
-        for data in datas:
-            url = data[0]
-            try:
-                date = find_pdf_metadata(url)
-                query = f"update filelist set moddate = '%s' where id = %d" % (date, data[1])
-                cur.execute(query)
-                conn.commit()
+        # datas = cur.fetchall()
+        # for data in datas:
+        #     url = data[0]
+        #     try:
+        #         date, title = find_pdf_metadata(url)
+        #         query = f"update list_file set moddate = '%s' where id = %d" % (date, data[1])
+        #         cur.execute(query)
                 
-                print(date)
-            except:
-                continue
+        #         query = f"update list_file set title = '%s' where id = %d" % (title, data[1])
+        #         cur.execute(query)
+        #         conn.commit()
+
+        #         print(str(date) + ", " + title)
+        #     except:
+        #         continue
+        pdf_settitle(cur)
+        conn.commit()

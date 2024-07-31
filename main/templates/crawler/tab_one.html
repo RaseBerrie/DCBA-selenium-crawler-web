@@ -1,0 +1,46 @@
+<div class="card">
+    <div class="card-header">
+        <b>검색 키 리스트</b>
+        <button class="btn btn-outline-dark" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;"
+                id="refresh-keys">
+            <i class="fa-solid fa-rotate"></i>
+        </button>
+    </div>
+
+    <div class="card-body overflow-auto" style="height: 50vh;">
+        <table class="table table-sm text-center align-middle caption-top">
+            <caption class="text-end">※ 검색이 완료되지 않은 셀은 노란 배경으로 표시</caption>
+            <tr class="table-dark">
+                <th rowspan="2">회사명</th>
+                <th rowspan="2">키</th>
+                <th rowspan="2">Bing</th>
+                <th rowspan="2">Google</th>
+                <th colspan="2">Github</th>
+            </tr>
+            <tr class="table-dark">
+                <th>Bing</th>
+                <th>Google</th>
+            </tr>
+        {% for data in datas %}
+            {% if "N" in data %}
+            <tr class="table table-warning" style="border-color: inherit;">
+            {% else %}
+            <tr>
+            {% endif %}
+                <td>{{ data[0] }}</td>
+                <td>{{ data[1] }}</td>
+                <td>{{ data[2] }}</td>
+                <td>{{ data[3] }}</td>
+                <td>{{ data[4] }}</td>
+                <td>{{ data[5] }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    </div>
+
+</div>
+<script>
+$("#refresh-keys").click(function () {
+    $("#tab-one-table").load(location.href + "/table");
+});
+</script>

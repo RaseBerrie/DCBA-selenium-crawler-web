@@ -1,29 +1,17 @@
 {% extends "crawler_index.html" %}
-{% block tab_one %}
+{% block crawler_html %}
 
 <button id="start-crawl" class="btn btn-outline-secondary">
     프로그램 시작
 </button>
 
-<table class="table table-sm">
-    <tr>
-        <th>회사명</th>
-        <th>키</th>
-        <th>bing</th>
-        <th>google</th>
-        <th>github_bing</th>
-        <th>github_google</th>
-    </tr>
-{% for data in datas %}
-    <tr>
-        <td>{{ data[4] }}</td>
-        <td>{{ data[0] }}</td>
-        <td>{{ data[1] }}</td>
-        <td>{{ data[2] }}</td>
-        <td>{{ data[3] }}</td>
-        <td>{{ data[5] }}</td>
-    </tr>
-{% endfor %}
-</table>
+<script>
+$("#start-crawl").on("click", function() {
+    $.get("/crawler/start", function(data) {
+        $('#tab-one-button').empty();
+        $('#tab-one-button').append(data);
+    });
+});
+</script>
 
 {% endblock %}

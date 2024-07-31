@@ -12,7 +12,9 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js" type="module"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" type="module"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
   integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script src="{{ url_for('static', filename='script.js') }}"></script>
@@ -30,12 +32,13 @@
         <span>Database for Crawling Based ASM</span>
       </div>
 
-      <nav><ul role="menu" id="side-nav-list">
+      <nav>
+      <ul role="menu" id="side-nav-list">
         <li id="dashboard">
           <i class="fa-solid fa-house"></i>
           <span>대시보드</span>
         </li>
-        <hr/>
+        <hr>
         <li id="content">
           <i class="fa-solid fa-square-poll-horizontal"></i>
           <span>크롤링 결과</span>
@@ -48,7 +51,7 @@
           <i class="fa-solid fa-unlock"></i>
           <span>관리자 페이지</span>
         </li>
-        <hr />
+        <hr>
         <li id="fileparses">
           <i class="fa-solid fa-file-arrow-down"></i>
           <span>파일 다운로드</span>
@@ -65,7 +68,13 @@
           <i class="fa-solid fa-square-xmark"></i>
           <span>불필요한 정보 노출</span>
         </li>
-      </ul></nav>
+        <hr>
+        <li id="others">
+          <i class="fa-solid fa-gear"></i>
+          <span>기타 설정</span>
+        </li>
+      </ul>
+      </nav>
 
       <div class="crawler" onclick="location.href='/crawler'">
         <i class="fa-solid fa-bug"></i>
@@ -90,3 +99,5 @@
 
 </body>
 </html>
+
+<!---->

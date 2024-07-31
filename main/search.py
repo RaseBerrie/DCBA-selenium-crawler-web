@@ -20,9 +20,12 @@ def main(sidemenu):
     tag = request.args.get('tag', '')
     page = int(request.args.get('page', 1))
     filedownload = request.args.get('filedownload', False, type=bool)
-    id = loads(unquote(request.cookies.get('topMenu')))
+    if request.cookies.get('topMenu') != None:
+        id = loads(unquote(request.cookies.get('topMenu')))
+    else:
+        id = {"comp": [0]}
 
-    per_page = 30
+    per_page = 15
     offset = (page - 1) * per_page
 
     conn = database_connect()
@@ -37,6 +40,15 @@ def main(sidemenu):
             query_dat = f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult"
             query_count = f"SELECT count(*) FROM temp_fileresult"
 
+    elif sidemenu == "neednot":
+        def_temp_table(cur, id)
+        if tag:
+            query_dat = SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
+            query_count = COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
+        else:
+            query_dat = SELECTQUERY + f" WHERE tags = 'is_neednot'"
+            query_count = COUNTQUERY + f" WHERE tags = 'is_neednot'"
+
     else:
         def_temp_table(cur, id)
         if sidemenu == "content":
@@ -50,10 +62,6 @@ def main(sidemenu):
         elif sidemenu == "adminpage":
             query_dat = SELECTQUERY + f" WHERE tags = 'is_admin'"
             query_count = COUNTQUERY + f" WHERE tags = 'is_admin'"
-
-        elif sidemenu == "neednot":
-            query_dat = SELECTQUERY + f" WHERE tags = 'is_neednot'"
-            query_count = COUNTQUERY + f" WHERE tags = 'is_neednot'"
 
         elif sidemenu == "gitsearch":
             query_dat = SELECTQUERY + f" WHERE tags = 'is_github'"
@@ -74,9 +82,9 @@ def main(sidemenu):
 
     if len(data) == 0:
         if sidemenu == "fileparses":
-            return NORESULT.format(3)
-        else:
             return NORESULT.format(4)
+        else:
+            return NORESULT.format(5)
 
     cur.close()
     conn.close()
@@ -106,9 +114,9 @@ def main(sidemenu):
         return response
 
     if sidemenu == "fileparses":
-        return render_template('file_results.html', datas=file_fining(data), count=count[0])
+        return render_template('file_results.html', datas=file_fining(data), count=count[0], enumerate=enumerate, page=page)
     else:
-        return render_template('default_results.html', datas=data_fining(data), count=count[0])
+        return render_template('default_results.html', datas=data_fining(data), count=count[0], enumerate=enumerate, page=page)
 
 @search.route('/<sidemenu>/result', methods=['GET'])
 def result(sidemenu):
@@ -119,9 +127,12 @@ def result(sidemenu):
     filedownload = request.args.get('filedownload', False, type=bool)
 
     page = int(request.args.get('page', 1))
-    id = loads(unquote(request.cookies.get('topMenu')))
-
-    per_page = 30
+    if request.cookies.get('topMenu') != None:
+        id = loads(unquote(request.cookies.get('topMenu')))
+    else:
+        id = {"comp": [0]}
+        
+    per_page = 15
     offset = (page - 1) * per_page
 
     conn = database_connect()
@@ -187,9 +198,9 @@ def result(sidemenu):
     
     if len(data) == 0:
         if sidemenu == "fileparses":
-            return NORESULT.format(3)
-        else:
             return NORESULT.format(4)
+        else:
+            return NORESULT.format(5)
 
     cur.close()
     conn.close()
@@ -219,13 +230,13 @@ def result(sidemenu):
         return response
 
     if sidemenu == "fileparses":
-        return render_template('file_results.html', datas=file_fining(data), count=count[0])
+        return render_template('file_results.html', datas=file_fining(data), count=count[0], enumerate=enumerate, page=page)
     else:
-        return render_template('default_results.html', datas=data_fining(data), count=count[0])
+        return render_template('default_results.html', datas=data_fining(data), count=count[0], enumerate=enumerate, page=page)
 
 @search.route('/dashboard/default', methods=['GET'])
 def dashboard():
-    query = 'SELECT id FROM company'
+    query = 'SELECT id FROM list_company'
     ids = query_database(query)
     count = len(ids)
 
@@ -233,20 +244,21 @@ def dashboard():
     for i in range(count):
         id = ids[i][0]
         query = '''
-            SELECT cmp.company, count(*) FROM company cmp
+            SELECT 	cmp.company,
+                    COUNT(*) AS totalcount,
+                    COUNT(CASE WHEN tags NOT LIKE '' THEN 1 END) AS tagcount,
+                    COUNT(CASE WHEN tags LIKE 'is_login' THEN 1 END) AS logincount,
+                    COUNT(CASE WHEN tags LIKE 'is_admin' THEN 1 END) AS admincount,
+                    COUNT(CASE WHEN tags LIKE 'is_file' THEN 1 END) AS filecount,
+                    COUNT(CASE WHEN tags LIKE 'is_neednot' THEN 1 END) AS nncount,
+                    COUNT(CASE WHEN tags LIKE 'is_github' THEN 1 END) AS gitcount
+            FROM list_company cmp
             JOIN conn_comp_root ccr ON cmp.id = ccr.comp_id
             JOIN conn_root_sub crs ON ccr.root_id = crs.root_id
             JOIN conn_sub_res csr ON crs.sub_id = csr.sub_id
-            JOIN searchresult sr ON csr.res_id = sr.id
+            JOIN search_result sr ON csr.res_id = sr.id
             WHERE ccr.comp_id = %s;
         '''
         data += query_database(query, (id, ))
 
-        # query = '''
-        #     SELECT cmp.company, count(*) FROM company cmp
-        #     JOIN conn_comp_root ccr ON cmp.id = ccr.comp_id
-        #     JOIN conn_root_sub crs ON ccr.root_id = crs.root_id
-        #     WHERE ccr.comp_id = %s;
-        # '''
-        # data += query_database(query, (i+1, ))
     return jsonify(data)

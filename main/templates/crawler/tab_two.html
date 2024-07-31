@@ -1,0 +1,135 @@
+<ul class="list-group list-group-flush">
+    <div class="alert alert-danger mt-3" id="nocomp" role="alert" style="display: none;">
+        회사명 입력 필요
+    </div>
+    <div class="alert alert-danger mt-3" id="nofile" role="alert" style="display: none;">
+        파일 업로드 필요
+    </div>
+    <div class="alert alert-danger mt-3" id="noval" role="alert" style="display: none;">
+        도메인 네임 입력 필요
+    </div>
+    <div class="alert alert-success mt-3" id="success" role="alert" style="display: none;">
+        업로드 성공
+    </div>
+
+    <li class="list-group-item d-flex justify-content-between align-items-start px-0 pb-3">
+        <div class="ms-2 me-auto flex-fill">
+            <h5>회사명 입력</h5>
+            <div class="input-group">
+                <span class="input-group-text">회사명</span>
+                <input type="text" id="comp" class="form-control" placeholder="회사명 입력" required>
+            </div>
+        </div>
+    </li>
+
+    <li class="list-group-item d-flex justify-content-between align-items-start px-0 py-3">
+        <div class="ms-2 me-auto flex-fill">
+            <h5>링크 입력</h5>
+            <ul class="list-group">
+                <li class="list-group-item d-flex">
+                    <input class="form-check-input me-3 align-self-center" type="radio" name="listGroupRadio" value="" id="firstradio" checked>
+                    <div class="input-group">
+                        <span class="input-group-text">CSV 파일 업로드</span>
+                        <input type="file" accept="text/csv" class="form-control" id="csv-input">
+                    </div>
+                </li>
+
+                <li class="list-group-item d-flex">
+                    <input class="form-check-input me-3 align-self-center" type="radio" name="listGroupRadio" value="" id="secondradio">
+                    <div class="input-group">
+                        <span class="input-group-text">도메인 네임</span>
+                        <textarea class="form-control" placeholder="도메인 네임 입력 (쉼표로 구분)" id="url-input" disabled></textarea>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </li>
+
+    <li class="list-group-item d-flex justify-content-between align-items-start px-0 py-3">
+        <button class="ms-2 btn btn-dark flex-fill" type="submit" id="upload">
+            업로드
+        </button>
+    </li>
+</ul>
+
+<script>
+$('input[type="radio"]').on('click', function(event) {
+    if ($("#firstradio").is(":checked")) {
+        $("#url-input").attr("disabled", true);
+        $("#csv-input").attr("disabled", false);
+    } else if ($("#secondradio").is(":checked")) {
+        $("#url-input").attr("disabled", false);
+        $("#csv-input").attr("disabled", true);
+    }
+});
+
+$('#upload').on('click', function(event) {
+    if ($('#comp').val() == "") {
+        $('#nocomp').show();
+        return;
+    }
+
+    // 파일 업로드
+    if ($("#firstradio").is(":checked")) {
+        event.preventDefault();
+        if ($('#csv-input')[0].files.length == 0) {
+            $('#nofile').show().siblings('.alert').hide();
+            return;
+        }
+
+        var comp = $('#comp').val();
+        var data = $('#csv-input')[0].files[0];
+
+        // 값 초기화
+        $('#comp').val('');
+        $('#csv-input').val('')
+
+        let form = new FormData();
+        form.append('comp', comp);
+        form.append('data', data);
+
+        $.ajax({
+            url: '/crawler/addlinks',
+            type: 'POST',
+            data: form,
+            dataType: 'json',
+            processData: false,
+            contentType: false
+        }).done((data)=>{
+            $('#success').show().siblings('.alert').hide();
+            setTimeout(function() {
+                $('#success').hide();
+            }, 3000);
+        });
+
+    // 링크 업로드
+    } else {
+        event.preventDefault();
+        if ($('#url-input').val() == '') {
+            $('#noval').show().siblings('.alert').hide();
+            return;
+        }
+    
+        var comp = $('#comp').val();
+        var data = $('#url-input').val();
+
+        // 값 초기화
+        $('#comp').val('');
+        $('#url-input').val('');
+
+        $.ajax({
+            url: '/crawler/addlinks',
+            type: 'GET',
+            data: `comp=${comp}&data=${data}`,
+            dataType: 'json',
+            processData: false,
+            contentType: false
+        }).done((data)=>{
+            $('#success').show().siblings('.alert').hide();
+            setTimeout(function() {
+                $('#success').hide();
+            }, 3000);
+        });
+    }
+});
+</script>

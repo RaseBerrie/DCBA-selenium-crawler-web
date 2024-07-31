@@ -4,8 +4,11 @@
 <style>
 .content-wrapper {
     max-width: 1024px;
-    width: 95%;
-    justify-self: center;
+    overflow: hidden;
+}
+.canvas {	
+    width: 100%;
+    height: 100%;
 }
 </style>
 
@@ -13,22 +16,42 @@
     <span class="top-title">대시보드</span>
 </div>
 
-<div class="body-container dashboard">
-    <div class="cardboard largecard">
-        <h3>식별된 전체 자산 수</h3>
-        <canvas id="bar-chart" width="100"></canvas>
+<div class="row mb-4">
+    <div class="col-8 d-flex align-items-stretch">
+        <div class="card">
+            <div class="card-header">검색 결과 분포</div>
+            <div class="card-body">
+                <canvas id="distribution-chart" width="1000"></canvas>
+            </div>
+        </div>
     </div>
-    <div class="cardboard">
-        <p>모든 국민은 학문과 예술의 자유를 가진다. 대통령은 헌법과 법률이 정하는 바에 의하여 국군을 통수한다. 대한민국은 통일을 지향하며, 자유민주적 기본질서에 입각한 평화적 통일 정책을 수립하고 이를 추진한다.</p>
-        <p>공공필요에 의한 재산권의 수용·사용 또는 제한 및 그에 대한 보상은 법률로써 하되, 정당한 보상을 지급하여야 한다. 국군은 국가의 안전보장과 국토방위의 신성한 의무를 수행함을 사명으로 하며, 그 정치적 중립성은 준수된다.</p>
+    <div class="col-4 d-flex align-items-stretch">
+        <div class="card">
+            <div class="card-header">식별된 전체 자산 수</div>
+            <div class="card-body">
+                <canvas id="totalcount-chart" width="1000" height="1000"></canvas>
+            </div>
+        </div>
     </div>
-    <div class="cardboard" style="grid-row: 2 /span 2">
-        <p>모든 국민은 학문과 예술의 자유를 가진다. 대통령은 헌법과 법률이 정하는 바에 의하여 국군을 통수한다. 대한민국은 통일을 지향하며, 자유민주적 기본질서에 입각한 평화적 통일 정책을 수립하고 이를 추진한다.</p>
-        <p>공공필요에 의한 재산권의 수용·사용 또는 제한 및 그에 대한 보상은 법률로써 하되, 정당한 보상을 지급하여야 한다. 국군은 국가의 안전보장과 국토방위의 신성한 의무를 수행함을 사명으로 하며, 그 정치적 중립성은 준수된다.</p>
+</div>
+<div class="row mt-4">
+    <div class="col-8 d-flex align-items-stretch">
+        <div class="card">
+            <div class="card-header">정보 노출 분포</div>
+            <div class="card-body">
+                <p>모든 국민은 학문과 예술의 자유를 가진다. 대통령은 헌법과 법률이 정하는 바에 의하여 국군을 통수한다. 대한민국은 통일을 지향하며, 자유민주적 기본질서에 입각한 평화적 통일 정책을 수립하고 이를 추진한다.</p>
+                <p>공공필요에 의한 재산권의 수용·사용 또는 제한 및 그에 대한 보상은 법률로써 하되, 정당한 보상을 지급하여야 한다. 국군은 국가의 안전보장과 국토방위의 신성한 의무를 수행함을 사명으로 하며, 그 정치적 중립성은 준수된다.</p>
+            </div>
+        </div>
     </div>
-    <div class="cardboard">
-        <p>모든 국민은 학문과 예술의 자유를 가진다. 대통령은 헌법과 법률이 정하는 바에 의하여 국군을 통수한다. 대한민국은 통일을 지향하며, 자유민주적 기본질서에 입각한 평화적 통일 정책을 수립하고 이를 추진한다.</p>
-        <p>공공필요에 의한 재산권의 수용·사용 또는 제한 및 그에 대한 보상은 법률로써 하되, 정당한 보상을 지급하여야 한다. 국군은 국가의 안전보장과 국토방위의 신성한 의무를 수행함을 사명으로 하며, 그 정치적 중립성은 준수된다.</p>
+    <div class="col-4">
+        <div class="card">
+            <div class="card-header">크롤링 진행 상황</div>
+            <div class="card-body">
+                <p>모든 국민은 학문과 예술의 자유를 가진다. 대통령은 헌법과 법률이 정하는 바에 의하여 국군을 통수한다. 대한민국은 통일을 지향하며, 자유민주적 기본질서에 입각한 평화적 통일 정책을 수립하고 이를 추진한다.</p>
+                <p>공공필요에 의한 재산권의 수용·사용 또는 제한 및 그에 대한 보상은 법률로써 하되, 정당한 보상을 지급하여야 한다. 국군은 국가의 안전보장과 국토방위의 신성한 의무를 수행함을 사명으로 하며, 그 정치적 중립성은 준수된다.</p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -38,3 +61,5 @@
   loadDashBoard();
 </script>
 {% endblock %}
+
+<!---->
