@@ -21,10 +21,19 @@
   </nav>
   <div class="tab-content" id="nav-tabContent">
     <div class="tab-pane fade show active" id="crawler" role="tabpanel" tabindex="0">
-      {% block tab_one %}{% endblock %}
+      <br/>
+      <div id="tab-one-button" class="d-grid col-6 mx-auto">
+        {% block crawler_html %}{% endblock %}
+      </div>
+      <br/>
+      <div id="tab-one-table">
+      {% include 'tab_one.html' %}
+      </div>
     </div>
     <div class="tab-pane fade" id="addtarget" role="tabpanel" tabindex="0">
-      {% include 'addtarget.html' %}
+      <div class="d-grid col-8 mx-auto py-2">
+        {% include 'tab_two.html' %}
+      </div>
     </div>
     <div class="tab-pane fade" id="selenium" role="tabpanel" tabindex="0" style="text-align: center;">
       <div class="ratio ratio-21x9">
@@ -37,11 +46,8 @@
 <script>  
 $(".nav-wrapper .nav-tabs").hide();
 
-$("#start-crawl").on("click", function() {
-  $.get("/crawler/start", function(data) {
-    $('#crawler').empty();
-    $('#crawler').append(data);
-  });
+$.get("/crawler/table", function(data) {
+  $("#tab-one-table").load(location.href + "/table");
 });
 </script>
 {% endblock %}

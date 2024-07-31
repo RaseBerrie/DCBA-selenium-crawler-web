@@ -1,14 +1,10 @@
-import multiprocessing
-import subprocess
+import multiprocessing, subprocess
+import questionary, atexit, time
+try:
+    from functions.crawler import database, searcher, urlfining, dbbuilder
+except:
+    import database, searcher, urlfining, dbbuilder
 
-import questionary
-import atexit
-import time
-
-import database
-import searcher
-import urlfining
-import dbbuilder
 
 ############### SETUP ###############
 
@@ -17,15 +13,16 @@ def grid_setup():
     command = ["java", "-jar", jar_path, "standalone"]
     subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     questionary.print("Selenium GRID Server started.", style="fg:ansiblack")
+    return 0
 
 def handle_exit():
     time.sleep(0.5)
     questionary.print("Done and Dusted. Bye! 👋", style="fg:ansiblack")
+    return 0
 
 def process_function(func, items, process_count):
-    chunk_size = len(items) // process_count
-    if chunk_size < 1:
-        chunk_size = 1
+    if (len(items) % process_count) == 0: chunk_size = (len(items) // process_count)
+    else: chunk_size = (len(items) // process_count) + 1
         
     chunks = [items[i * chunk_size:(i + 1) * chunk_size] for i in range(process_count)]
     
@@ -40,12 +37,12 @@ def process_function(func, items, process_count):
         if len(processes) == process_count:
             flag = False
 
-    for p in processes:
-        p.join()
+    for p in processes: p.join()
+    return 0
 
 def worker_function(func, items):
-    for item in items:
-        func(item)
+    for item in items: func(item)
+    return 0
 
 def start_menu():
     result = questionary.rawselect("What do you want to do?",
@@ -77,6 +74,8 @@ def main():
 
         elif menu_result == "Find SUBDOMAINs and make connections":
             dbbuilder.dbbuild()
+            questionary.print("Process done successfully! 🥰\n", style="fg:ansiblack")
+
             menu_result = start_menu()
             continue
 
@@ -119,18 +118,30 @@ def main():
             menu_result = start_menu()
             continue
 
+    return 0
+
 
 ############### WRAPPER ###############
 
+def wrapper_search(engine, item, is_git):
+    if engine == 'google':
+        if is_git: searcher.google_search(item, "github")
+        else: searcher.google_search(item)
+    elif engine == 'bing':
+        if is_git: searcher.bing_search(item, "github")
+        else: searcher.bing_search(item)
+
 def wrapper_google_search(item):
-    driver = searcher.driver_setup()
-    searcher.google_search(driver, item)
-    driver.quit()
+    wrapper_search('google', item, False)
 
 def wrapper_bing_search(item):
-    driver = searcher.driver_setup()
-    searcher.bing_search(driver, item)
-    driver.quit()
+    wrapper_search('bing', item, False)
+
+def wrapper_google_search_github(item):
+    wrapper_search('google', item, True)
+
+def wrapper_bing_search_github(item):
+    wrapper_search('bing', item, True)
 
 ############### MAIN ###############
 

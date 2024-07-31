@@ -26,50 +26,50 @@ def database_connect():
 def def_temp_table(cur, id):
     if id["comp"][0] == 0:
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_searchresult AS
-                            SELECT se, subdomain, title, url, content, tags
-                            FROM searchresult;'''
+                            SELECT se, subdomain, title, url, content, tags, id
+                            FROM search_result;'''
         cur.execute(temp_table_query)
     elif id["root"][0] == 0:
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_searchresult AS
-                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags
+                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
                             FROM conn_comp_root ccr
                             JOIN conn_root_sub crs ON ccr.root_id = crs.root_id
                             JOIN conn_sub_res csr ON crs.sub_id = csr.sub_id
-                            JOIN searchresult sr ON csr.res_id = sr.id
+                            JOIN search_result sr ON csr.res_id = sr.id
                             WHERE ccr.comp_id = %s
                             UNION
-                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags
+                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
                             FROM conn_comp_root ccr
                             JOIN conn_root_res crr ON ccr.root_id = crr.root_id
-                            JOIN searchresult sr ON crr.res_id = sr.id
+                            JOIN search_result sr ON crr.res_id = sr.id
                             WHERE ccr.comp_id = %s;'''
         cur.execute(temp_table_query, (id["comp"][0], id["comp"][0], ))
     elif id["sub"][0] == 0:
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_searchresult AS
-                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags
+                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
                             FROM conn_root_sub crs
                             JOIN conn_sub_res csr ON crs.sub_id = csr.sub_id
-                            JOIN searchresult sr ON csr.res_id = sr.id
+                            JOIN search_result sr ON csr.res_id = sr.id
                             WHERE crs.root_id = %s
                             UNION
                             SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags
                             FROM conn_root_res crr
-                            JOIN searchresult sr ON crr.res_id = sr.id
+                            JOIN search_result sr ON crr.res_id = sr.id
                             WHERE crr.root_id = %s;'''
         cur.execute(temp_table_query, (id["root"][0], id["root"][0],))
     else:
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_searchresult AS
-                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags
+                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
                             FROM conn_sub_res csr
-                            JOIN searchresult sr ON csr.res_id = sr.id
+                            JOIN search_result sr ON csr.res_id = sr.id
                             WHERE csr.sub_id = %s;'''
         cur.execute(temp_table_query, (id["sub"][0],))
 
 def file_temp_table(cur, id):
     if id["comp"][0] == 0:
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_fileresult
-                            AS SELECT fl.*, sr.se FROM filelist fl
-                            JOIN searchresult sr ON sr.id = fl.id
+                            AS SELECT fl.*, sr.se FROM list_file fl
+                            JOIN search_result sr ON sr.id = fl.id
                             ORDER BY fl.moddate DESC;'''
         cur.execute(temp_table_query)
     elif id["root"][0] == 0:
@@ -77,8 +77,8 @@ def file_temp_table(cur, id):
                             FROM conn_comp_root ccr
                             JOIN conn_root_sub crs ON ccr.root_id = crs.root_id
                             JOIN conn_sub_res csr ON crs.sub_id = csr.sub_id
-                            JOIN filelist fl ON csr.res_id = fl.id
-                            JOIN searchresult sr ON sr.id = fl.id
+                            JOIN list_file fl ON csr.res_id = fl.id
+                            JOIN search_result sr ON sr.id = fl.id
                             WHERE ccr.comp_id = %s
                             ORDER BY fl.moddate DESC;'''
         cur.execute(temp_table_query, (id["comp"][0],))
@@ -86,8 +86,8 @@ def file_temp_table(cur, id):
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_fileresult SELECT fl.*, sr.se
                             FROM conn_root_sub crs
                             JOIN conn_sub_res csr ON crs.sub_id = csr.sub_id
-                            JOIN filelist fl ON csr.res_id = fl.id
-                            JOIN searchresult sr ON sr.id = fl.id
+                            JOIN list_file fl ON csr.res_id = fl.id
+                            JOIN search_result sr ON sr.id = fl.id
                             WHERE crs.root_id = %s
                             ORDER BY fl.moddate DESC;
                             '''
@@ -95,8 +95,8 @@ def file_temp_table(cur, id):
     else:
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_fileresult SELECT fl.*, sr.se
                             FROM conn_sub_res csr
-                            JOIN filelist fl ON csr.res_id = fl.id
-                            JOIN searchresult sr ON sr.id = fl.id   
+                            JOIN list_file fl ON csr.res_id = fl.id
+                            JOIN search_result sr ON sr.id = fl.id   
                             WHERE csr.sub_id = %s
                             ORDER BY fl.moddate DESC;
                             '''

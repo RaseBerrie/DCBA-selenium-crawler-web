@@ -6,6 +6,12 @@
         <button class="btn btn-primary border border-light-subtle" id="download">
             CSV 다운로드
         </button>
+        <div class="btn-group border border-light-subtle" role="group">
+            <button class="btn btn-light border-light-subtle tags">에러 페이지</button>
+            <button class="btn btn-light border-start border-light-subtle tags">샘플 페이지</button>
+            <button class="btn btn-light border-start border-light-subtle tags">서버 정보 노출</button>
+            <button class="btn btn-light border-start border-light-subtle tags">기타</button>
+        </div>
     </div>
 
     <div class="top-align-box">
@@ -40,7 +46,10 @@
 <table class="table table-hover" style="table-layout: fixed; word-break: break-all;">
     <thead class="table table-dark">
         <tr>
-            <th style="width: 20%;">서브도메인</th>
+            <th style="width: 4%; text-align: center;">#</th>
+            <th style="width: 20%;">
+                서브도메인
+            </th>
             <th style="width: 20%;">제목</th>
             <th>URL</th>
             <th style="width: 35%;">콘텐츠</th>
@@ -49,19 +58,17 @@
     <tbody id="results"></tbody>
 </table>
 
-<div class="d-flex justify-content-center">
-    <div id="loading" class="spinner-border" style="display: none; margin-top: 1rem;"></div>
-</div>
+<ul id="page-number" class="pagination justify-content-center"></ul>
 </div>
 
 <script>
 var page = 1;
-var pagename = $(location).attr('pathname');
-$('#' + pagename.substr(1)).addClass("selected");
-
-var loading = false;
-var endofdata = false;
 var queryed = false;
+var loading = false;
+
+var pagename = $(location).attr('pathname');
+if(pagename.substr(1) != 'neednot') $('.btn-group').hide();
+$('#' + pagename.substr(1)).addClass("selected");
 
 loadInitiateResults(true, pagename);
 downloadButton(pagename);
@@ -70,22 +77,25 @@ $('#searchForm').on('submit', function(event) {
     event.preventDefault();
     $('#results').empty();
 
-    page = 1;
+    page = 1
     queryed = true;
     loadResults(true, pagename);
 });
 
-$(window).scroll(function() {
-    var total = Number($('.top-total strong').text())
 
-    // total = 211일 때 나머지 = 1, page = 8까지 로드 후 page = 9 로드 전에 정지
-    // total = 210일 때 나머지 = 0, page = 7까지 로드 후 page = 8 로드 전에 정지
-    if (page % total != 0 && page > parseInt(total / 30) + 1) endofdata = true;
-    else if (page % total === 0 && page === parseInt(total / 30) + 1) endofdata = true;
+$('.tags').on('click', function(event) {
+    event.preventDefault();
+    $('#results').empty();
 
-    if ($(window).scrollTop() + $(window).height() >= $(document).height() && !endofdata) {
-        if (queryed) loadResults(false, pagename);
-        else loadInitiateResults(false, pagename);
+    $(this).addClass('active').siblings().removeClass('active');
+
+    if (queryed) {
+        page = 1;
+        loadResults(true, pagename);
+    }
+    else {
+        page = 1;
+        loadInitiateResults(true, pagename);
     }
 });
 </script>

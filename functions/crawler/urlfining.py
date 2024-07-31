@@ -6,11 +6,9 @@ import pymysql
 # 4. 루트 도메인이라면 그렇다고 표시 (아니라면 Default 값으로)
 # 5. 해당되는 루트 도메인과 연결
 
-def url_fining():
-    with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT DISTINCT searchresult.subdomain FROM searchresult")
-            datas = cur.fetchall()
+def url_fining_process(cur):
+    cur.execute("SELECT sub_url FROM domain_sub")
+    datas = cur.fetchall()
 
     notfoundcount = 0
     s = set()
@@ -34,14 +32,31 @@ def url_fining():
             tmpstr = ".".join(tmplist)
             print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
-        elif ((tmp.count('co') == 1) and (tmp.count('kr') == 1)):
-            found = tmp.index('co')
-            found = found - 1
+        elif (tmp.count('kr') == 1):
+            if tmp.count('or') == 1:
+                found = tmp.index('or')
+                found = found - 1
 
-            tmplist = tmp[found:]
-            tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")            
-            s.add(tmpstr)
+                tmplist = tmp[found:]
+                tmpstr = ".".join(tmplist)
+                print("FINED: " + tmpstr + "\n")
+                s.add(tmpstr)
+            elif tmp.count('co') == 1:
+                found = tmp.index('co')
+                found = found - 1
+
+                tmplist = tmp[found:]
+                tmpstr = ".".join(tmplist)
+                print("FINED: " + tmpstr + "\n")            
+                s.add(tmpstr)
+            else:
+                found = tmp.index('kr')
+                found = found - 1
+
+                tmplist = tmp[found:]
+                tmpstr = ".".join(tmplist)
+                print("FINED: " + tmpstr + "\n")            
+                s.add(tmpstr)
         elif tmp.count('jp') == 1:
             found = tmp.index('jp')
             found = found - 1
@@ -82,8 +97,16 @@ def url_fining():
             tmpstr = ".".join(tmplist)
             print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
-        elif ((tmp.count('or') == 1) and (tmp.count('kr') == 1)):
-            found = tmp.index('or')
+        elif tmp.count('in') == 1:
+            found = tmp.index('in')
+            found = found - 1
+
+            tmplist = tmp[found:]
+            tmpstr = ".".join(tmplist)
+            print("FINED: " + tmpstr + "\n")
+            s.add(tmpstr)
+        elif tmp.count('cn') == 1:
+            found = tmp.index('cn')
             found = found - 1
 
             tmplist = tmp[found:]
@@ -108,9 +131,12 @@ def url_fining():
     print("FAILED: " + str(notfoundcount))
 
     for line in s:
-        with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
-            with conn.cursor() as cur:
-                cur.execute("INSERT IGNORE INTO rootdomain(root_url) VALUES('{0}')".format(line))
-            conn.commit()
+        cur.execute("INSERT IGNORE INTO domain_root(root_url) VALUES('{0}')".format(line))
     
     return 0
+
+def url_fining():
+    with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
+        with conn.cursor() as cur:
+            url_fining_process(cur)
+        conn.commit()
