@@ -3,14 +3,9 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 
-import pymysql
-import random
-import time
-import os
-import base64
-
-import logging
-import traceback
+import pymysql, os, base64
+import random, time
+import logging, traceback
 
 PAUSE_SEC = random.randrange(1,3)
 def ERROR_CONTROL(originalurl, e, isexit=False):
@@ -20,6 +15,8 @@ def ERROR_CONTROL(originalurl, e, isexit=False):
   else:
     print("[!] ERROR in [{0}]:".format(originalurl), e)
     logging.error(traceback.format_exc())
+  
+  return 0
 
 ############### SETUP ###############
 
@@ -27,12 +24,13 @@ def save_to_database(se, sd, title, link, content, target):
   if not "bing.com" in link:
     with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
       with conn.cursor() as cur:
-        query = "INSERT IGNORE INTO searchresult(se, subdomain, title, url, content, tags) VALUES('{0}', '{1}', '{2}', '{3}', '{4}',".format(se, sd, title, link, content)
+        query = "INSERT IGNORE INTO search_result(se, subdomain, title, url, content, tags) VALUES('{0}', '{1}', '{2}', '{3}', '{4}',".format(se, sd, title, link, content)
         if target == "github": query = query + " 'is_github');"
         else: query = query + " '');"
 
         cur.execute(query)
       conn.commit()
+  return 0
 
 def cut_string_including_substring(main_string, substring):
   index = main_string.find(substring)
@@ -84,6 +82,7 @@ def scrolltoend_chrome(driver):
       except:
         break
     last_height = new_height
+  return 0
 
 def scrolltoend_bing(driver):
   last_height = driver.execute_script("return document.body.scrollHeight")
@@ -96,11 +95,13 @@ def scrolltoend_bing(driver):
     if new_height == last_height:
       break
     last_height = new_height
+  return 0
 
 ############### SEARCHER ###############
 
-def google_search(driver, originalurl, target="default"):
-  logging.basicConfig(filename='./error.log', level=logging.WARNING, encoding="utf-8")
+def google_search(originalurl, target="default"):
+  logging.basicConfig(filename='C:\\Users\\itf\\Documents\\selenium-search\\logs\\crawler_error.log', level=logging.WARNING, encoding="utf-8")
+  driver = driver_setup()
 
   # 깃허브 검색 여부 설정
   if target == "github": searchkey = "site:github.com" + originalurl
@@ -191,15 +192,23 @@ def google_search(driver, originalurl, target="default"):
     except: break
 
   # 데이터베이스에 커밋
+  driver.quit()
   with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
-      query = "UPDATE searchKeys SET Google='Y' WHERE search_key='{0}'".format(originalurl)
+      query = ''
+
+      if target == "github":
+        query = "UPDATE search_key SET GitHub_Google='Y' WHERE search_key='{0}'".format(originalurl)
+      else:
+        query = "UPDATE search_key SET Google='Y' WHERE search_key='{0}'".format(originalurl)
+
       cur.execute(query)
     conn.commit()
     print("done!")
 
-def bing_search(driver, originalurl, target="default"):
-  logging.basicConfig(filename='./error.log', level=logging.WARNING, encoding="utf-8")
+def bing_search(originalurl, target="default"):
+  logging.basicConfig(filename='C:\\Users\\itf\\Documents\\selenium-search\\logs\\crawler_error.log', level=logging.WARNING, encoding="utf-8")
+  driver = driver_setup()
   searchkey = ''
 
   if target == "github": searchkey = "site:github.com " + originalurl
@@ -271,9 +280,17 @@ def bing_search(driver, originalurl, target="default"):
     try: driver.find_element(By.CLASS_NAME, 'sw_next').find_element(By.XPATH, '..').click()
     except: break
 
+  driver.quit()
   with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
-      query = "UPDATE searchKeys SET Bing='Y' WHERE search_key='{0}'".format(originalurl)
+      query = ''
+
+      if target == "github":
+        query = "UPDATE search_key SET GitHub_Bing='Y' WHERE search_key='{0}'".format(originalurl)
+      else:
+        query = "UPDATE search_key SET Bing='Y' WHERE search_key='{0}'".format(originalurl)
+      
       cur.execute(query)
+      
     conn.commit()
     print("done!")

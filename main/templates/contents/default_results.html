@@ -1,38 +1,34 @@
-{% for data in datas %}
+{% for i, data in enumerate(datas) %}
 <tr>
-    <td style="word-break: keep-all !important; overflow: hidden;">
+    <td class="bg-light" style="text-align: center;">{{ (page - 1) * 15 + i + 1 }}</td>
+    <td class="text-truncate" style="overflow: hidden;">
         <span class="badge rounded-pill text-bg-secondary" style="pointer-events: none;">{{ data[0] }}</span> {{ data[1] }} 
     </td>
-    <td>
+    <td class="text-truncate">
         {{ data[2] }}
         <span id="count-result" style="display: none;">{{ count }}</span>    
     </td>
-    <td>
-        {% if data[3]|length > 30 %}
-        <a href="{{ data[3] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
-            {{ data[3][:40] }}…
-        </a>
-        
-        {% else %}
+    <td class="text-truncate">
         <a href="{{ data[3] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
             {{ data[3] }}
         </a>
-        
-        {% endif %}
     </td>
     <td>
-        {% if data[4]|length > 40 %}
-        <div class="show-less">
-            {{ data[4][:40] }}…
-            <span class="see-more badge text-bg-secondary" style="cursor: pointer;">더보기</span>
+        <div class="show-less" style="display: flex;">
+            <div class="text-truncate" style="width: 90%;"> {{ data[4] }} </div>
+            <span class="length" style="white-space: nowrap;"> {{ data[4] }} </span>
+            <button class="see-more btn btn-outline-secondary"
+                    style="--bs-btn-padding-y: .05rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">
+                    더보기
+            </button>
         </div>
-        <div class="show-more" style="display:none">
+        <div class="show-more">
             {{ data[4] }}
-            <span class="see-less badge text-bg-secondary" style="cursor: pointer;">접기</span>
+            <button class="see-less btn btn-outline-secondary"
+                    style="--bs-btn-padding-y: .05rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">
+                    접기
+            </button>
         </div>
-
-        {% else %} {{ data[4][:40] }}
-        {% endif %}
     </td>
 </tr>
 {% endfor %}

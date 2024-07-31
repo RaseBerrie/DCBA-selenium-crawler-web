@@ -16,6 +16,26 @@ function menuClick() {
     }
 )} 
 
+function pageClick() {
+    $('.pagination .page-item').on('click', function() {
+        var clickedPage = $(this).find('.page-link').text();
+        clickedPage = String(clickedPage).replace(/^\s+|\s+$/g, '');
+
+        if (clickedPage == "이전") page = parseInt(page) - 1;
+        else if (clickedPage == "다음") page = parseInt(page) + 1;
+        else if (clickedPage == "처음") page = 1;
+        else if (clickedPage == "마지막") {
+            if (page % 15 != 0) {
+                page = parseInt( $('#count-result').text() / 15 ) + 1;
+            } else page = parseInt( $('#count-result').text() / 15 );
+        }
+        else page = clickedPage;
+
+        if (queryed) loadResults(true, pagename);
+        else loadInitiateResults(true, pagename);
+    }
+)} 
+
 function scrollTop() {
     if ($(window).scrollTop() > 500) {
         $(".backToTopBtn").addClass("active");
@@ -33,6 +53,20 @@ function scrollTop() {
 });
 
 function foldableButton() {
+    $('.show-less').each(function() {
+        if ($(this).find('.length').width() > $(this).parent('td').width()) {
+            $(this).find('.text-truncate').show();
+            
+            $(this).siblings('.show-more').hide();
+            $(this).find('.length').hide();
+        } else {
+            $(this).find('.text-truncate').hide();
+
+            $(this).siblings('.show-more').remove();
+            $(this).find('.see-more').remove();
+        }
+    });
+
     $('.see-more').click(function() {
         $(this).parent('.show-less').hide();
         $(this).parent('.show-less').siblings('.show-more').show();
@@ -58,7 +92,12 @@ function downloadButton(pagename) {
 
             if(isTagActive) {
                 tag = $(".top-align-box").find(".active").text();
-                if(tag === "기타") tag = "others";
+                switch(tag) {
+                    case "기타": tag = "others"; break;
+                    case "에러 페이지": tag = "error"; break;
+                    case "샘플 페이지": tag = "sample"; break;
+                    case "서버 정보 노출": tag = "servinfo"; break;
+                }
             } else tag = ''
 
             if(pagename === "/fileparses") {
@@ -156,27 +195,194 @@ function searchMenu() {
     });
 }
 
+function pagingButtons() {
+    var count = $('#count-result').text();
+    if (count == 0) count = 1;
+
+    let countResult = $('#count-result').text();
+    let countPages = Math.ceil(countResult / 15);
+
+    HTML = ''
+    if (page != 1) { 
+        HTML = `
+        <li class="page-item">
+        <a class="page-link" href="#" aria-label="Previous">
+            <span style="display: none;">처음</span>
+            <i class="fa-solid fa-angles-left"></i>
+        </a></li>
+        <li class="page-item">
+        <a class="page-link" href="#" aria-label="Previous">
+            <span aria-hidden="true">이전</span>
+        </a></li>`
+    }
+
+    if (countPages > 10) {
+        pageInt = parseInt(page);
+        if (pageInt > 5) {
+            let end = pageInt + 5
+            if (end > countPages) end = countPages + 1;
+
+            let i = end - 10
+            if (i < 0) i = 1
+
+            for (i; i < end; i++) {
+                HTML += '<li class="page-item" id="page-'
+                HTML += i;
+                HTML += '"><a class="page-link" href="#">';
+                HTML += i;
+                HTML += '</a></li>'; }
+        } else {
+            for (let i = 1; i < 10; i++) {
+                HTML += '<li class="page-item" id="page-'
+                HTML += i;
+                HTML += '"><a class="page-link" href="#">';
+                HTML += i;
+                HTML += '</a></li>'; }}
+        
+    } else {
+        for (let i = 0; i < countPages; i++) {
+            HTML += '<li class="page-item" id="page-'
+            HTML += i + 1;
+            HTML += '"><a class="page-link" href="#">';
+            HTML += i + 1;
+            HTML += '</a></li>'; }
+    }
+
+    if(page < countPages) {
+        HTML += `<li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">다음</span>
+                </a></li>
+                <li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span style="display: none;">마지막</span>
+                    <i class="fa-solid fa-angles-right"></i>
+                </a></li>`
+            }
+
+    $('#page-number').empty()
+    $('#page-number').append(HTML);
+    pageClick();
+}
+
 /*************** OUTPUT ***************/
 function loadDashBoard() {
-    var resultlabel = []
-    var resultcount = []
+    let compTitle = []
+    let dataCount = {
+        'total': [],
+        'dist': {
+            'page': [],
+            'file': [],
+            'expose': []
+        }};
 
     $.get('dashboard/default', function(data) {
         data.forEach(data => {
-            resultlabel.push(data[0]);
-            resultcount.push(data[1]);
+            compTitle.push(data[0].slice(0,4));
+            dataCount.total.push(data[1]);
+
+            let tagSum = data[2]
+            dataCount.dist.page.push( (data[3] + data[4]) / tagSum) * 100 
+            dataCount.dist.file.push( data[5] / tagSum )
+            dataCount.dist.expose.push( (data[6] + data[7]) / tagSum)
         });
-        new Chart(document.getElementById("bar-chart"), {
+
+        console.log(compTitle);
+        console.log(dataCount);
+
+        let percentLabelOption = {
+            formatter: function(value, _context) {
+                return Math.round(value * 100) + '%';
+                },
+            color: '#FFFFFF',
+            backgroundColor: 'rgba(0, 0, 0, .5)',
+            borderRadius: '4',
+        }
+
+        new Chart(document.getElementById("distribution-chart"), {
+            plugins: [ChartDataLabels],
             type: 'bar',
             data: {
-            labels: resultlabel,
-            datasets: [
-                { data: resultcount }
-            ]
+                labels: compTitle,
+                datasets: [{
+                    label: '관리자/로그인 페이지',
+                    data: dataCount.dist.page,
+                    borderWidth: 1,
+                    datalabels: percentLabelOption
+                },
+                {
+                    label: '파일 다운로드',
+                    data: dataCount.dist.file,
+                    borderWidth: 1,
+                    datalabels: percentLabelOption
+                },
+                {
+                    label: '정보 노출 페이지',
+                    data: dataCount.dist.expose,
+                    borderWidth: 1,
+                    datalabels: percentLabelOption
+                }]
             },
             options: {
-            legend: { display: false },
-            title: { display: true, text: "크롤링 데이터 개수" },
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            callback: function(value, _index, _values) {
+                                return value * 100;
+                            }
+                        }
+                    },
+                    y: { stacked: true }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                },
+            }
+        });
+
+        new Chart(document.getElementById("totalcount-chart"), {
+            plugins: [ChartDataLabels],
+            type: 'bar',
+            data: {
+                labels: compTitle,
+                datasets: [
+                    {
+                        data: dataCount.total,
+                        borderWidth: 1,
+                        datalabels: {
+                            formatter: function(value, _context) {
+                                return value + '건';
+                            },
+                            align: 'end',
+                            color: '#FFFFFF',
+                            backgroundColor: 'rgba(0, 0, 0, .5)',
+                            borderRadius: '4',
+                        }
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        type: 'logarithmic',
+                        ticks: {
+                            callback: function(value, _index, _values) {
+                                const remain = value / (Math.pow(10, Math.floor(Math.log10(value))));
+                                if (remain === 1) {
+                                    return value;
+                                }
+                                return null;
+                            }           
+                        }
+                    }
+                }
             }
         });
     });
@@ -184,37 +390,41 @@ function loadDashBoard() {
 
 function loadInitiateResults(reset, pagename) {
     if (loading) return;
-    
     loading = true;
-    $('#loading').show();
 
     let tag = '';
-    if(pagename === "/fileparses") {
+    if(pagename == "/fileparses" || pagename == "/neednot") {
         if($(".top-align-box").find(".active").text() != undefined) {
             tag = $(".top-align-box").find(".active").text();
-            if(tag === "기타") tag = "others";
+            switch(tag) {
+                case "기타": tag = 'others'; break;
+                case "에러 페이지": tag = "error"; break;
+                case "샘플 페이지": tag = "sample"; break;
+                case "서버 정보 노출": tag = "servinfo"; break;
+            }
         }
     }
 
     $.get(pagename + '/default', { tag: tag, page: page }, function(data) {
         if (reset) endofdata = false;
 
+        $('#results').empty();
         $('#results').append(data);
         $('#loading').hide();
 
         var count = $('#count-result').text();
         $('.top-total strong').text(count);
 
-        searchMenu(); foldableButton();
-        loading = false; page++;
+        searchMenu(); foldableButton(); pagingButtons();
+
+        loading = false;
+        $('#page-' + String(page)).addClass('active');
     });
 }
 
 function loadResults(reset, pagename) {
     if (loading) return;
-
     loading = true;
-    $('#loading').show();
 
     const menu = $('#search-param').val();
     const query = $('#searchInput').val();
@@ -222,16 +432,21 @@ function loadResults(reset, pagename) {
     let tag = '';
     let param;
 
-    /* 파일 식별 */
-    if(pagename === "/fileparses") {
-        switch(menu) {
-            case "파일 이름": param = 'title'; break;
-            case "주요 데이터": param = 'parsed_data'; break;
-            default: param = '';
-        }
+    if(pagename == "/fileparses" || pagename == "/neednot") {
+        if(pagename === "/fileparses") {
+            switch(menu) {
+                case "파일 이름": param = 'title'; break;
+                case "주요 데이터": param = 'parsed_data'; break;
+                default: param = '';
+            }}
         if($(".top-align-box").find(".active").text() != undefined) {
             tag = $(".top-align-box").find(".active").text();
-            if(tag === "기타") tag = "others";
+            switch(tag) {
+                case "기타": tag = ''; break;
+                case "에러 페이지": tag = "error"; break;
+                case "샘플 페이지": tag = "sample"; break;
+                case "서버 정보 노출": tag = "servinfo"; break;
+            }
         }
     } else {
         switch(menu) {
@@ -245,16 +460,17 @@ function loadResults(reset, pagename) {
 
     if (query) {
         $.get(pagename + "/result", { tag: tag, menu: param, key: query, page: page }, function(data) {
-            if (reset) endofdata = false;
-
+            $('#results').empty();
             $('#results').append(data);
             $('#loading').hide();
 
             var count = $('#count-result').text();
             $('.top-total strong').text(count);
 
-            searchMenu(); foldableButton();
-            loading = false; page++;
+            searchMenu(); foldableButton(); pagingButtons();
+
+            loading = false;
+            $('#page-' + String(page)).addClass('active');
         });
     }
 }

@@ -1,8 +1,12 @@
 import pymysql
+try:
+    from functions.crawler.urlfining import url_fining
+except:
+    from urlfining import url_fining
 
 ############### DEF ###############
 def insert_into_subdomain(cur):
-    cur.execute("SELECT DISTINCT searchresult.subdomain FROM searchresult")
+    cur.execute("SELECT DISTINCT search_result.subdomain FROM search_result")
     datas = cur.fetchall()
 
     for data in datas:
@@ -10,35 +14,43 @@ def insert_into_subdomain(cur):
         if ":" in line:
             tmp = line.split(":")
             line = tmp[0] # 포트 번호 삭제
-        cur.execute("INSERT IGNORE INTO subdomain(sub_url) VALUES('{0}')".format(line))    
+        cur.execute("INSERT IGNORE INTO domain_sub(sub_url) VALUES('{0}')".format(line))    
 
 def delete_from_subdomain(cur):
-    cur.execute("SELECT root_url FROM rootdomain")
+    cur.execute("SELECT root_url FROM domain_root")
     datas = cur.fetchall()
 
     for data in datas:
         root_url = data[0]
-        cur.execute("DELETE FROM subdomain WHERE sub_url LIKE '{0}'".format(root_url))
-    
+        cur.execute("DELETE FROM domain_sub WHERE sub_url LIKE '{0}'".format(root_url))
+
+def insert_from_key_to_subdomain(cur):
+    cur.execute("SELECT search_key FROM search_key")
+    keys = cur.fetchall()
+
+    for key in keys:
+        subdomain = key[0]
+        cur.execute("INSERT IGNORE INTO domain_sub(sub_url) VALUES('{0}')".format(subdomain))
+
 def conn_sub_res(cur):
-    cur.execute("SELECT * FROM subdomain")
+    cur.execute("SELECT * FROM domain_sub")
     suburls = cur.fetchall()
 
     for suburl in suburls:
         url = suburl[1]
-        cur.execute("SELECT id FROM searchresult WHERE subdomain LIKE '{0}%'".format(url))
+        cur.execute("SELECT id FROM search_result WHERE subdomain LIKE '{0}%'".format(url))
         ids = cur.fetchall()
 
         for id in ids:
             cur.execute("INSERT ignore INTO conn_sub_res(sub_id, res_id) VALUES({0}, {1})".format(suburl[0], id[0]))
             
 def conn_root_sub(cur):
-    cur.execute("SELECT * FROM rootdomain")
+    cur.execute("SELECT * FROM domain_root")
     datas = cur.fetchall()
 
     for data in datas:
         root_url = data[1]
-        cur.execute("SELECT id FROM subdomain WHERE sub_url LIKE '%.{0}'".format(root_url))
+        cur.execute("SELECT id FROM domain_sub WHERE sub_url LIKE '%.{0}'".format(root_url))
         ids = cur.fetchall()
 
         for id in ids:
@@ -46,7 +58,7 @@ def conn_root_sub(cur):
 
 def conn_root_res(cur):
     query = '''
-        SELECT sr.subdomain, sr.id FROM searchresult sr
+        SELECT sr.subdomain, sr.id FROM search_result sr
         LEFT JOIN conn_sub_res csr ON sr.id = csr.res_id
         WHERE csr.sub_id IS NULL;
     '''
@@ -56,7 +68,7 @@ def conn_root_res(cur):
     for data in datas:
         root_url = data[0]
         root_url = root_url.split(":")[0]
-        cur.execute("SELECT id FROM rootdomain WHERE root_url='{0}'".format(root_url))
+        cur.execute("SELECT id FROM domain_root WHERE root_url='{0}'".format(root_url))
 
         id = cur.fetchone()
         try:
@@ -86,4 +98,13 @@ def dbbuild_root():
     cur.close()
     conn.close()
 
-dbbuild_root()
+def dbbuild_module():
+    with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
+        with conn.cursor() as cur:
+            insert_from_key_to_subdomain(cur)
+        conn.commit()
+
+    url_fining()
+    with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
+        with conn.cursor() as cur:
+            delete_from_subdomain(cur)

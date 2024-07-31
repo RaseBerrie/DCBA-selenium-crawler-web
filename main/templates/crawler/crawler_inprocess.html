@@ -2,7 +2,7 @@
 {% extends "crawler_index.html" %}
 {% endif %}
 
-{% block tab_one %}
+{% block crawler_html %}
 
 <button id="finish-crawl" class="btn btn-outline-danger">
     프로그램 종료
@@ -11,8 +11,8 @@
 <script>
 $("#finish-crawl").on("click", function() {
     $.get("/crawler/finish", function(data) {
-        $("#crawler").empty();
-        $("#crawler").append(data);
+        $("#tab-one-button").empty();
+        $("#tab-one-button").append(data);
     });
 });
 </script>
