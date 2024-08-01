@@ -7,51 +7,27 @@ import io, psutil, re, pymysql
 import json
 import csv
 
+from datetime import datetime
 from flask import Blueprint, render_template, make_response, request
+
 crawler = Blueprint('crawler', __name__, template_folder='templates/crawler', url_prefix="/crawler")
 
-ISDONE = "크롤러 프로세스 종료됨"
+####################    함수 정의       ####################
 
 def new_csv_list(file_storage):
     result = []
     with io.StringIO(file_storage.read().decode('utf-8-sig')) as file:
         file.seek(0)
         reader = csv.reader(file)
-
         for line in reader:
             result.append(line[0])
-    
     return result
 
-def find_process(pid_json):
-    pid = json.loads(pid_json)
-    result = dict()
-
-    for value in pid.values():
-        if psutil.pid_exists(value):
-            result[value] = True
-        else:
-            result[value] = False
-    
-    return result
-
-def kill_process(pid_dict):
-
-    data = ""
-
-    for pid in pid_dict.keys():
-        if pid_dict[pid]:
-            procs = psutil.Process(pid).children()
-            try:
-                for p in procs:
-                    p.terminate()
-                data += ISDONE
-            except Exception as e:
-                data += str(e)
-        else:
-            data += ISDONE
-
-    return data
+def find_process():
+    for proc in psutil.process_iter(['name']):
+        if proc.info["name"] == "chromedriver.exe":
+            return True
+    return False
 
 def check_url(text:str):
     url_reg = r"[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)"
@@ -63,22 +39,25 @@ def check_url(text:str):
     else:        
         return True
 
+####################    접속 직후       ####################
+
 @crawler.route('/')
 def crawler_page():
-    pid = request.cookies.get("pid")
+    cookie = request.cookies.get("crawler")
     
     query = "SELECT company, search_key, bing, google, github_bing, github_google FROM search_key ORDER BY GOOGLE"
     datas = query_database(query)
 
-    if pid is not None:
-        pid_dict = find_process(pid)
-        if True in pid_dict:
+    if cookie is not None:
+        if find_process():
             return render_template('crawler_inprocess.html', processing=False)
         else:
-            return render_template('crawler_finish.html', data=ISDONE, processing=False)
+            return render_template('crawler_finish.html', processing=False)
     else:
         return render_template('crawler_start.html', reload=False, datas=datas)
-    
+
+####################    키 리스트 보기  ####################
+
 @crawler.route('/table')
 def reload():
     query = "SELECT company, search_key, bing, google, github_bing, github_google FROM search_key ORDER BY GOOGLE"
@@ -86,37 +65,26 @@ def reload():
 
     return render_template('tab_one.html', datas=datas)
 
+####################    크롤러 시작     ####################
+
 @crawler.route('/start')
 def start():
     args = dict()
-    pid = dict()
 
     args["google"] = True
     args["bing"] = True
-
     args["github_google"] = True
     args["github_bing"] = True
 
     json_val = json.dumps(args)
-    pid = process_start(json_val)
+    process_start(json_val)
 
     resp = make_response(render_template('crawler_inprocess.html', processing=True))
-    resp.set_cookie("pid", json.dumps(pid))
+    resp.set_cookie("crawler", str(datetime.now().timestamp()))
 
     return resp
 
-@crawler.route('/finish')
-def finish():
-    pid = request.cookies.get("pid")
-    data = ""
-
-    pid_dict = find_process(pid_json = pid)
-    data += kill_process(pid_dict = pid_dict)
-
-    resp = make_response(render_template('crawler_finish.html', processing=True, data=data))
-    resp.set_cookie("pid", "", expires=0)
-    
-    return resp
+####################    링크 추가       ####################
 
 @crawler.route('/addlinks', methods=['GET', 'POST'])
 def addlinks():

@@ -16,6 +16,16 @@ function menuClick() {
     }
 )} 
 
+function resizeWindow() {
+	if ($(window).width() < 991) {
+		$('.sidebar-wrapper').addClass('collapse').removeClass('show');
+		$('.btn-close').show()
+	} else {
+		$('.sidebar-wrapper').addClass('show').removeClass('collapse');
+		$('.btn-close').hide()
+	}	
+}
+
 function pageClick() {
     $('.pagination .page-item').on('click', function() {
         var clickedPage = $(this).find('.page-link').text();
@@ -277,23 +287,38 @@ function loadDashBoard() {
         }};
 
     $.get('dashboard/default', function(data) {
-        data.forEach(data => {
-            compTitle.push(data[0].slice(0,4));
-            dataCount.total.push(data[1]);
+        data.slice(1).forEach(row => {
+            let tagSum = row[2];
+            row.slice(3).forEach(
+                function(value, index) { row[index + 3] = value / tagSum }
+            );
 
-            let tagSum = data[2]
-            dataCount.dist.page.push( (data[3] + data[4]) / tagSum) * 100 
-            dataCount.dist.file.push( data[5] / tagSum )
-            dataCount.dist.expose.push( (data[6] + data[7]) / tagSum)
+            compTitle.push(row[0].slice(0,4));
+            dataCount.total.push(row[1]);
+
+            dataCount.dist.page.push(row[3] + row[4])
+            dataCount.dist.file.push(row[5])
+            dataCount.dist.expose.push(row[6] + row[7])
         });
 
-        console.log(compTitle);
-        console.log(dataCount);
+        let keyTotal = data[0][0]
+        let bingDone = data[0][1]
+        let googleDone = data[0][2]
 
         let percentLabelOption = {
             formatter: function(value, _context) {
                 return Math.round(value * 100) + '%';
                 },
+            color: '#FFFFFF',
+            backgroundColor: 'rgba(0, 0, 0, .5)',
+            borderRadius: '4',
+        }
+
+        let numberLabelOption = {
+            formatter: function(value, _context) {
+                return value + '건';
+            },
+            align: 'end',
             color: '#FFFFFF',
             backgroundColor: 'rgba(0, 0, 0, .5)',
             borderRadius: '4',
@@ -353,15 +378,7 @@ function loadDashBoard() {
                     {
                         data: dataCount.total,
                         borderWidth: 1,
-                        datalabels: {
-                            formatter: function(value, _context) {
-                                return value + '건';
-                            },
-                            align: 'end',
-                            color: '#FFFFFF',
-                            backgroundColor: 'rgba(0, 0, 0, .5)',
-                            borderRadius: '4',
-                        }
+                        datalabels: numberLabelOption
                     }
                 ]
             },
@@ -385,7 +402,82 @@ function loadDashBoard() {
                 }
             }
         });
-    });
+
+        new Chart(document.getElementById("google-progress"), {
+            plugins: [ChartDataLabels],
+            type: 'doughnut',
+            data: {
+                labels: ['완료', '미완료'],
+                datasets: [
+                    {
+                        data: [googleDone/keyTotal, (keyTotal-googleDone)/keyTotal],
+                        datalabels: percentLabelOption
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Google 검색 진행 상황',
+                        font: { family: 'Pretendard', size: 14 },
+                    },
+                    legend: { position: 'bottom' }
+                },
+            }
+        });
+
+        new Chart(document.getElementById("bing-progress"), {
+            plugins: [ChartDataLabels],
+            type: 'doughnut',
+            data: {
+                labels: ['완료', '미완료'],
+                datasets: [
+                    {
+                        data: [bingDone/keyTotal, (keyTotal-bingDone)/keyTotal],
+                        datalabels: percentLabelOption
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Bing 검색 진행 상황',
+                        font: { family: 'Pretendard', size: 14 }
+                    },
+                    legend: { position: 'bottom' }
+                },
+            }
+        });
+
+        let expose = new Chart(document.getElementById("exposestate-chart"), {
+            type: 'radar',
+            data: {
+                labels: ['로그인', '관리자', '파일', '불필요', 'GitHub'],
+                datasets: []
+            },
+            options: {
+                scales: {
+                    r: { ticks: { display: false } }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+            }
+        });
+
+        data.slice(1).forEach(data => {
+            var newDataset = {
+                label: data[0],
+                data: data.slice(3),
+                borderWidth: 1,
+                fill: true
+            }
+            expose.data.datasets.push(newDataset);
+        }); expose.update();
+
+    }); //END of GET
 }
 
 function loadInitiateResults(reset, pagename) {
@@ -422,7 +514,7 @@ function loadInitiateResults(reset, pagename) {
     });
 }
 
-function loadResults(reset, pagename) {
+function loadResults(_reset, pagename) {
     if (loading) return;
     loading = true;
 
@@ -446,9 +538,12 @@ function loadResults(reset, pagename) {
                 case "에러 페이지": tag = "error"; break;
                 case "샘플 페이지": tag = "sample"; break;
                 case "서버 정보 노출": tag = "servinfo"; break;
+                default: break;
             }
         }
-    } else {
+    }
+    
+    if(pagename != "/fileparses") {
         switch(menu) {
             case "서브도메인": param = 'subdomain'; break;
             case "제목": param = 'title'; break;
@@ -458,7 +553,7 @@ function loadResults(reset, pagename) {
         }
     }
 
-    if (query) {
+    if (query != '') {
         $.get(pagename + "/result", { tag: tag, menu: param, key: query, page: page }, function(data) {
             $('#results').empty();
             $('#results').append(data);
@@ -472,5 +567,5 @@ function loadResults(reset, pagename) {
             loading = false;
             $('#page-' + String(page)).addClass('active');
         });
-    }
+    } else location.reload();
 }

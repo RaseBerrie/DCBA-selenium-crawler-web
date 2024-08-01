@@ -1,5 +1,5 @@
 # 고정변수
-NORESULT = '<tr><td colspan={0}>검색 결과가 없습니다.<span id="count-result" style="display: none;">0</span></td></tr>'
+NORESULT = '<tr><td colspan=5>검색 결과가 없습니다.<span id="count-result" style="display: none;">0</span></td></tr>'
 SELECTQUERY = f'SELECT * FROM temp_searchresult'
 COUNTQUERY = f'SELECT count(*) FROM temp_searchresult'
 
@@ -31,23 +31,26 @@ def main(sidemenu):
     conn = database_connect()
     cur = conn.cursor()
 
+    query_dat = ""
+    query_count = ""
+
     if sidemenu == "fileparses":
         file_temp_table(cur, id)
         if tag:
-            query_dat = f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
-            query_count = f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
+            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
+            query_count += f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
         else:
-            query_dat = f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult"
-            query_count = f"SELECT count(*) FROM temp_fileresult"
+            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult"
+            query_count += f"SELECT count(*) FROM temp_fileresult"
 
     elif sidemenu == "neednot":
         def_temp_table(cur, id)
         if tag:
-            query_dat = SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
-            query_count = COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
+            query_dat += SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
+            query_count += COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
         else:
-            query_dat = SELECTQUERY + f" WHERE tags = 'is_neednot'"
-            query_count = COUNTQUERY + f" WHERE tags = 'is_neednot'"
+            query_dat += SELECTQUERY + f" WHERE tags = 'is_neednot'"
+            query_count += COUNTQUERY + f" WHERE tags = 'is_neednot'"
 
     else:
         def_temp_table(cur, id)
@@ -56,20 +59,20 @@ def main(sidemenu):
             query_count = COUNTQUERY
         
         elif sidemenu == "loginpage":
-            query_dat = SELECTQUERY + f" WHERE tags = 'is_login'"
-            query_count = COUNTQUERY + f" WHERE tags = 'is_login'"
+            query_dat += SELECTQUERY + f" WHERE tags = 'is_login'"
+            query_count += COUNTQUERY + f" WHERE tags = 'is_login'"
         
         elif sidemenu == "adminpage":
-            query_dat = SELECTQUERY + f" WHERE tags = 'is_admin'"
-            query_count = COUNTQUERY + f" WHERE tags = 'is_admin'"
+            query_dat += SELECTQUERY + f" WHERE tags = 'is_admin'"
+            query_count += COUNTQUERY + f" WHERE tags = 'is_admin'"
 
         elif sidemenu == "gitsearch":
-            query_dat = SELECTQUERY + f" WHERE tags = 'is_github'"
-            query_count = COUNTQUERY + f" WHERE tags = 'is_github'"
+            query_dat += SELECTQUERY + f" WHERE tags = 'is_github'"
+            query_count += COUNTQUERY + f" WHERE tags = 'is_github'"
 
         elif sidemenu == "jssearch":
-            query_dat = SELECTQUERY + f" WHERE tags = 'is_js'"
-            query_count = COUNTQUERY + f" WHERE tags = 'is_js'"
+            query_dat += SELECTQUERY + f" WHERE tags = 'is_js'"
+            query_count += COUNTQUERY + f" WHERE tags = 'is_js'"
 
     if not filedownload:
         query_dat = query_dat + " LIMIT %s OFFSET %s" % (per_page, offset)
@@ -81,10 +84,7 @@ def main(sidemenu):
     count = cur.fetchone()
 
     if len(data) == 0:
-        if sidemenu == "fileparses":
-            return NORESULT.format(4)
-        else:
-            return NORESULT.format(5)
+            return NORESULT
 
     cur.close()
     conn.close()
@@ -147,17 +147,37 @@ def result(sidemenu):
     if sidemenu == "fileparses":
         file_temp_table(cur, id)
         if menu and key and tag:
-            query_dat = f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
-            query_count = f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
+            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
+            query_count += f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
 
         elif menu and key:
-            query_dat = f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
-            query_count = f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
+            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
+            query_count += f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
             
         elif tag:
-            query_dat = f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
-            query_count = f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
+            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
+            query_count += f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
 
+        query_dat = query_dat + " LIMIT %s OFFSET %s" % (per_page, offset)
+        cur.execute(query_dat)
+        data = cur.fetchall()
+
+
+    elif sidemenu == "neednot":
+        def_temp_table(cur, id)
+        if menu and key and tag:
+            query_dat += SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s' AND sr.{menu} LIKE %s AND tags = 'is_neednot'" % (tag, f'"%{key}%"')
+            query_count += COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s' AND sr.{menu} LIKE %s AND tags = 'is_neednot'" % (tag, f'"%{key}%"')
+
+        elif menu and key:
+            query_dat += SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE sr.{menu} LIKE %s" % (f'"%{key}%"')
+            query_count += COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE sr.{menu} LIKE %s" % (f'"%{key}%"')
+
+        elif tag:
+            query_dat += SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
+            query_count += COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
+
+        query_dat = query_dat + " LIMIT %s OFFSET %s" % (per_page, offset)
         cur.execute(query_dat)
         data = cur.fetchall()
 
@@ -165,28 +185,28 @@ def result(sidemenu):
         if menu and key:
             def_temp_table(cur, id)
             if sidemenu == "content":
-                query_dat = SELECTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
-                query_count = COUNTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
+                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
+                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
 
             elif sidemenu == "loginpage":
-                query_dat = SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_login'" % (f'"%{key}%"')
-                query_count = COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_login'" % (f'"%{key}%"')
+                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_login'" % (f'"%{key}%"')
+                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_login'" % (f'"%{key}%"')
             
             elif sidemenu == "adminpage":
-                query_dat = SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_admin'" % (f'"%{key}%"')
-                query_count = COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_admin'" % (f'"%{key}%"')
+                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_admin'" % (f'"%{key}%"')
+                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_admin'" % (f'"%{key}%"')
 
             elif sidemenu == "neednot":
-                query_dat = SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_neednot'" % (f'"%{key}%"')
-                query_count = COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_neednot'" % (f'"%{key}%"')
+                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_neednot'" % (f'"%{key}%"')
+                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_neednot'" % (f'"%{key}%"')
 
             elif sidemenu == "gitsearch":
-                query_dat = SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_github'" % (f'"%{key}%"')
-                query_count = COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_github'" % (f'"%{key}%"')
+                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_github'" % (f'"%{key}%"')
+                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_github'" % (f'"%{key}%"')
 
             elif sidemenu == "jssearch":
-                query_dat = SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_js'"
-                query_count = COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_js'"
+                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_js'"
+                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'is_js'"
 
             query_dat = query_dat + " LIMIT %s OFFSET %s" % (per_page, offset)
 
@@ -197,10 +217,7 @@ def result(sidemenu):
     count = cur.fetchone()
     
     if len(data) == 0:
-        if sidemenu == "fileparses":
-            return NORESULT.format(4)
-        else:
-            return NORESULT.format(5)
+        return NORESULT
 
     cur.close()
     conn.close()
@@ -241,23 +258,32 @@ def dashboard():
     count = len(ids)
 
     data = []
+    query = '''
+        SELECT 	COUNT(*),
+                COUNT(CASE WHEN Bing NOT LIKE 'N' AND GitHub_Bing NOT LIKE 'N' THEN 1 END),
+                COUNT(CASE WHEN Google NOT LIKE 'N' AND GitHub_Google NOT LIKE 'N' THEN 1 END)
+        FROM 	search_key
+        '''
+    data += query_database(query)
+    
     for i in range(count):
         id = ids[i][0]
+
         query = '''
-            SELECT 	cmp.company,
-                    COUNT(*) AS totalcount,
-                    COUNT(CASE WHEN tags NOT LIKE '' THEN 1 END) AS tagcount,
-                    COUNT(CASE WHEN tags LIKE 'is_login' THEN 1 END) AS logincount,
-                    COUNT(CASE WHEN tags LIKE 'is_admin' THEN 1 END) AS admincount,
-                    COUNT(CASE WHEN tags LIKE 'is_file' THEN 1 END) AS filecount,
-                    COUNT(CASE WHEN tags LIKE 'is_neednot' THEN 1 END) AS nncount,
-                    COUNT(CASE WHEN tags LIKE 'is_github' THEN 1 END) AS gitcount
-            FROM list_company cmp
-            JOIN conn_comp_root ccr ON cmp.id = ccr.comp_id
-            JOIN conn_root_sub crs ON ccr.root_id = crs.root_id
-            JOIN conn_sub_res csr ON crs.sub_id = csr.sub_id
-            JOIN search_result sr ON csr.res_id = sr.id
-            WHERE ccr.comp_id = %s;
+        SELECT 	cmp.company,
+                COUNT(*) AS totalcount,
+                COUNT(CASE WHEN tags NOT LIKE '' THEN 1 END) AS tagcount,
+                COUNT(CASE WHEN tags LIKE 'is_login' THEN 1 END) AS logincount,
+                COUNT(CASE WHEN tags LIKE 'is_admin' THEN 1 END) AS admincount,
+                COUNT(CASE WHEN tags LIKE 'is_file' THEN 1 END) AS filecount,
+                COUNT(CASE WHEN tags LIKE 'is_neednot' THEN 1 END) AS nncount,
+                COUNT(CASE WHEN tags LIKE 'is_github' THEN 1 END) AS gitcount
+        FROM 	list_company cmp
+        JOIN 	conn_comp_root ccr ON cmp.id = ccr.comp_id
+        JOIN 	conn_root_sub crs ON ccr.root_id = crs.root_id
+        JOIN 	conn_sub_res csr ON crs.sub_id = csr.sub_id
+        JOIN 	search_result sr ON csr.res_id = sr.id
+        WHERE   ccr.comp_id = %s;
         '''
         data += query_database(query, (id, ))
 
