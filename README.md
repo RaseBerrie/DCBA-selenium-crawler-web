@@ -6,3 +6,4 @@
 * `PyMySQL` 1.1.0 
 * `MySQL Server` 8.0.37
 * `Selenium Grid` 4.20.0
+* `Flask` 3.0.3
