@@ -19,10 +19,7 @@ def new_csv_list(file_storage):
     with io.StringIO(file_storage.read().decode('utf-8-sig')) as file:
         file.seek(0)
         reader = csv.reader(file)
-        for line in reader:
-            result.append(line[0])
-    return result
-
+        
 def find_process():
     for proc in psutil.process_iter(['name']):
         if proc.info["name"] == "chromedriver.exe":

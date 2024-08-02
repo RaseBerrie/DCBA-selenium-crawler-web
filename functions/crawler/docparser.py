@@ -48,12 +48,12 @@ def pdf_settitle(cur):
                 title = title.split("_", 1)[1]
 
         query = f'UPDATE list_file SET title = "%s" WHERE url = "%s";' % (title.replace("+", " "), url)
+
         try:
             cur.execute(query)
         except Exception as e:
             print(e)
             print(query)
-
             continue
 
         if date:
@@ -63,7 +63,6 @@ def pdf_settitle(cur):
             except Exception as e:
                 print(e)
                 print(query)
-
                 continue
 
 def find_pdf_metadata(url):
@@ -115,5 +114,23 @@ def pdf_parse_search(url, keyword):
 
 with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
     with conn.cursor() as cur:
+        # query = "select url, id from list_file where filetype = 'pdf' and moddate is null"
+        # cur.execute(query)
+
+        # datas = cur.fetchall()
+        # for data in datas:
+        #     url = data[0]
+        #     try:
+        #         date, title = find_pdf_metadata(url)
+        #         query = f"update list_file set moddate = '%s' where id = %d" % (date, data[1])
+        #         cur.execute(query)
+                
+        #         query = f"update list_file set title = '%s' where id = %d" % (title, data[1])
+        #         cur.execute(query)
+        #         conn.commit()
+
+        #         print(str(date) + ", " + title)
+        #     except:
+        #         continue
         pdf_settitle(cur)
         conn.commit()

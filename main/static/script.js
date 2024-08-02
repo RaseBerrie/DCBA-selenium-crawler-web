@@ -304,7 +304,6 @@ function loadDashBoard() {
         let keyTotal = data[0][0]
         let bingDone = data[0][1]
         let googleDone = data[0][2]
-
         let percentLabelOption = {
             formatter: function(value, _context) {
                 return Math.round(value * 100) + '%';
@@ -378,7 +377,15 @@ function loadDashBoard() {
                     {
                         data: dataCount.total,
                         borderWidth: 1,
-                        datalabels: numberLabelOption
+                        datalabels: {
+                            formatter: function(value, _context) {
+                                return value + '건';
+                            },
+                            align: 'end',
+                            color: '#FFFFFF',
+                            backgroundColor: 'rgba(0, 0, 0, .5)',
+                            borderRadius: '4',
+                        }
                     }
                 ]
             },
@@ -403,7 +410,7 @@ function loadDashBoard() {
             }
         });
 
-        new Chart(document.getElementById("google-progress"), {
+      new Chart(document.getElementById("google-progress"), {
             plugins: [ChartDataLabels],
             type: 'doughnut',
             data: {

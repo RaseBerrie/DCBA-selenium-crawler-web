@@ -42,7 +42,7 @@ def main(sidemenu):
         else:
             query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult"
             query_count += f"SELECT count(*) FROM temp_fileresult"
-
+            
     elif sidemenu == "neednot":
         def_temp_table(cur, id)
         if tag:

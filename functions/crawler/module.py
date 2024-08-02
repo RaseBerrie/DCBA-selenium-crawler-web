@@ -37,7 +37,7 @@ def process_function(func, items, process_count):
 
 def process_start(json_data):
     args = json.loads(json_data)
-    
+
     def start_searcher(key):
         if args[key]:
             ls = create_task_list(key)
@@ -50,10 +50,8 @@ def process_start(json_data):
             elif key == "github_bing":
                 p = Process(target=process_function, args=(stal.wrapper_bing_search_github, ls, 2))
             p.start()
-
         return 0
 
     for key in args.keys():
         start_searcher(key)
-
     return 0
