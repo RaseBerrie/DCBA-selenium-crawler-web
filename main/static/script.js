@@ -16,6 +16,16 @@ function menuClick() {
     }
 )} 
 
+function resizeWindow() {
+	if ($(window).width() < 991) {
+		$('.sidebar-wrapper').addClass('collapse').removeClass('show');
+		$('.btn-close').show()
+	} else {
+		$('.sidebar-wrapper').addClass('show').removeClass('collapse');
+		$('.btn-close').hide()
+	}	
+}
+
 function pageClick() {
     $('.pagination .page-item').on('click', function() {
         var clickedPage = $(this).find('.page-link').text();
@@ -395,7 +405,6 @@ function loadDashBoard() {
 
         new Chart(document.getElementById("google-progress"), {
             plugins: [ChartDataLabels],
-            title: 'Google 검색 진행 상황',
             type: 'doughnut',
             data: {
                 labels: ['완료', '미완료'],
@@ -410,7 +419,8 @@ function loadDashBoard() {
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Google 검색 진행 상황'
+                        text: 'Google 검색 진행 상황',
+                        font: { family: 'Pretendard', size: 14 },
                     },
                     legend: { position: 'bottom' }
                 },
@@ -433,7 +443,8 @@ function loadDashBoard() {
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Bing 검색 진행 상황'
+                        text: 'Bing 검색 진행 상황',
+                        font: { family: 'Pretendard', size: 14 }
                     },
                     legend: { position: 'bottom' }
                 },

@@ -6,29 +6,27 @@
     max-width: 1024px;
     overflow: hidden;
 }
-#distribution-chart, #totalcount-chart {	
-    height: 100%;
-}
 .card-header{
     font-weight: bold;
 }
 </style>
 
+<div class="d-flex flex-column" style="height: 85vh;">
 <div class="top-container">
     <span class="top-title">대시보드</span>
 </div>
 
-<div class="row mb-4">
-    <div class="col-8 d-flex align-items-stretch">
-        <div class="card flex-fill">
+<div class="row mb-2 flex-grow-1">
+    <div class="col-8 d-flex">
+        <div class="card flex-fill align-items-stretch">
             <div class="card-header">검색 결과 분포</div>
             <div class="card-body">
                 <canvas id="distribution-chart"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-4 d-flex align-items-stretch">
-        <div class="card">
+    <div class="col-4 d-flex">
+        <div class="card flex-fill align-items-stretch">
             <div class="card-header">식별된 전체 자산 수</div>
             <div class="card-body">
                 <canvas id="totalcount-chart"></canvas>
@@ -36,24 +34,25 @@
         </div>
     </div>
 </div>
-<div class="row mt-4">
-    <div class="col-8 d-flex align-items-stretch">
-        <div class="card flex-fill">
+<div class="row mt-2 flex-grow-1">
+    <div class="col-8 d-flex">
+        <div class="card flex-fill align-items-stretch">
             <div class="card-header">크롤링 진행 상황</div>
-            <div class="card-body d-flex justify-content-evenly">
-                <div><canvas id="bing-progress"></canvas></div>
-                <div><canvas id="google-progress"></canvas></div>
+            <div class="card-body row row-cols-2 d-flex align-content-stretch">
+                <div class="col"><canvas id="bing-progress"></canvas></div>
+                <div class="col"><canvas id="google-progress"></canvas></div>
             </div>
         </div>
     </div>
-    <div class="col-4 d-flex align-items-stretch">
-        <div class="card">
-            <div class="card-header">정보 노출 분포</div>
+    <div class="col-4 d-flex">
+        <div class="card flex-fill align-items-stretch">
+            <div class="card-header">전체 결과 분포</div>
             <div class="card-body">
                 <canvas id="exposestate-chart"></canvas>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script>
@@ -73,16 +72,16 @@
                 (chart.parent('div').width())
             );
             chart.outerHeight(
-                (chart.parent('div').height()) * 0.9
+                (chart.parent('div').height()) * 0.7
             );
         })
     }
 
     $(document).ready(function(){
-        resize();
         loadDashBoard();
+        resize();
 
-        $(window).on("resize", function(){                      
+        $(window).resize(function(){                      
             resize();
         });
     });

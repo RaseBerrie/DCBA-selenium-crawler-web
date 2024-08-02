@@ -4,17 +4,9 @@
 
 {% block crawler_html %}
 
-<button id="finish-crawl" class="btn btn-outline-danger">
-    프로그램 종료
-</button>
-
-<script>
-$("#finish-crawl").on("click", function() {
-    $.get("/crawler/finish", function(data) {
-        $("#tab-one-button").empty();
-        $("#tab-one-button").append(data);
-    });
-});
-</script>
-
+<div class="alert alert-primary mb-0" role="alert">
+    <h5 class="alert-heading">크롤러가 실행 중입니다.</h5>
+    <p class="mb-0">실행 중인 크롤러 프로세스는 <b>그리드 세션</b> 탭에서 확인하실 수 있습니다.</p>
+</div>
+  
 {% endblock %}
