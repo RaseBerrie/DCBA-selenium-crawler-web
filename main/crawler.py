@@ -7,7 +7,7 @@ import io, psutil, re, pymysql
 import json
 import csv
 
-from datetime import datetime
+from urllib.parse import quote, unquote
 from flask import Blueprint, render_template, make_response, request
 
 crawler = Blueprint('crawler', __name__, template_folder='templates/crawler', url_prefix="/crawler")
@@ -43,24 +43,20 @@ def check_url(text:str):
 
 @crawler.route('/')
 def crawler_page():
-    cookie = request.cookies.get("crawler")
-    
-    query = "SELECT company, search_key, bing, google, github_bing, github_google FROM search_key ORDER BY GOOGLE"
-    datas = query_database(query)
-
-    if cookie is not None:
+    cookie = json.loads(unquote(request.cookies.get("status")))
+    if cookie["crawler"] != False:
         if find_process():
             return render_template('crawler_inprocess.html', processing=False)
         else:
             return render_template('crawler_finish.html', processing=False)
     else:
-        return render_template('crawler_start.html', reload=False, datas=datas)
+        return render_template('crawler_start.html', reload=False)
 
 ####################    키 리스트 보기  ####################
 
 @crawler.route('/table')
 def reload():
-    query = "SELECT company, search_key, bing, google, github_bing, github_google FROM search_key ORDER BY GOOGLE"
+    query = "SELECT company, search_key, bing, google, github_bing, github_google FROM search_key ORDER BY id DESC"
     datas = query_database(query)
 
     return render_template('tab_one.html', datas=datas)
@@ -69,6 +65,7 @@ def reload():
 
 @crawler.route('/start')
 def start():
+    cookie = json.loads(unquote(request.cookies.get("status")))
     args = dict()
 
     args["google"] = True
@@ -80,8 +77,9 @@ def start():
     process_start(json_val)
 
     resp = make_response(render_template('crawler_inprocess.html', processing=True))
-    resp.set_cookie("crawler", str(datetime.now().timestamp()))
+    cookie["crawler"] = True
 
+    resp.set_cookie("status", quote(json.dumps(cookie)), path='/', max_age=600)
     return resp
 
 ####################    링크 추가       ####################
@@ -152,5 +150,7 @@ def addlinks():
                 cur.execute(query)
                 conn.commit()
 
-    conn_root_sub()
+            conn_root_sub(cur)
+
     return result
+

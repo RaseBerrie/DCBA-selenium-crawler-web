@@ -34,10 +34,17 @@
     </div>
 </div>
 
-<div class="body-container">
-<div class="top-align-box">
+<div class="body-container mb-4">
+<div class="top-align-box justify-content-between">
     <div class="top-total">
         검색 결과: <strong></strong>개
+    </div>
+    <div class="d-flex align-items-center mb-1">
+        <p class="ms-auto my-auto lh-1 text-body-tertiary">데이터 필터링</p>
+        <label class="switch mx-1">
+            <input id="filter" type="checkbox">
+            <span class="slider round"></span>
+        </label>
     </div>
 </div>
 
@@ -54,7 +61,7 @@
     <tbody id="results"></tbody>
 </table>
 
-<ul id="page-number" class="pagination justify-content-center"></ul>
+<ul id="page-number" class="pagination justify-content-center mb-0"></ul>
 </div>
 </div>
 
@@ -62,38 +69,13 @@
 var page = 1;
 var loading = false;
 var queryed = false;
-
 var pagename = "/fileparses";
-$('#' + pagename.substr(1)).addClass("selected");
 
-loadInitiateResults(true, pagename);
-downloadButton(pagename);
-
-$('#searchForm').on('submit', function(event) {
-    event.preventDefault();
-    $('#results').empty();
-
-    page = 1;
-    queryed = true;
-    loadResults(true, pagename);
+$(document).ready(function() {
+    loadContent();
+    loadInitiateResults(true, pagename);
+    downloadButton(pagename);
 });
-
-$('.tags').on('click', function(event) {
-    event.preventDefault();
-    $('#results').empty();
-
-    $(this).addClass('active').siblings().removeClass('active');
-
-    if (queryed) {
-        page = 1;
-        loadResults(true, pagename);
-    }
-    else {
-        page = 1;
-        loadInitiateResults(true, pagename);
-    }
-});
-
 </script>
 </div>
 

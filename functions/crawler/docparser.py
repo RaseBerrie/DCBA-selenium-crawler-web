@@ -12,7 +12,7 @@ def parse_date(date):
     if not match:
         raise ValueError("Invalid Date format")
     
-    year, month, day, hour, minute, sec, offset_hours, offset_minutes = match.groups()
+    year, month, day, hour, minute, offset_hours, offset_minutes = match.groups()
     dt = datetime(int(year), int(month), int(day), int(hour), int(minute))
     
     offset = int(offset_hours) * 60 + int(offset_minutes)
@@ -26,13 +26,18 @@ def parse_date(date):
     return formatted_date
 
 def pdf_settitle(cur):
-    cur.execute("SELECT url FROM list_file WHERE title is null or title = '' or title = 'notitle' or title = 'untitled' or title like '%무제%'")
+    cur.execute("SELECT url FROM list_file WHERE title is null or title = '' or title = 'notitle' or title = 'untitled' or title like '%무제%' or title like '?dir=%'")
     datas = cur.fetchall()
 
     for data in datas:
         url = data[0]
 
-        date, title = find_pdf_metadata(url)
+        try:
+            date, title = find_pdf_metadata(url)
+        except:
+            data = ""
+            title = ""
+
         if title == "":
             pretitle = url.split("/")[-1]
 
@@ -41,6 +46,8 @@ def pdf_settitle(cur):
             
             if "filename=" in pretitle:
                 title = pretitle.split("filename=", 1)[1]
+            elif "fileName=" in pretitle:
+                title = pretitle.split("fileName=", 1)[1]
             else:
                 title = pretitle
 
@@ -56,15 +63,15 @@ def pdf_settitle(cur):
 
             continue
 
-        if date:
-            query = f'UPDATE list_file SET moddate = %s WHERE url = "%s";' % (date, url)
-            try:
-                cur.execute(query)
-            except Exception as e:
-                print(e)
-                print(query)
+        # if date:
+        #     query = f'UPDATE list_file SET moddate = %s WHERE url = "%s";' % (date, url)
+        #     try:
+        #         cur.execute(query)
+        #     except Exception as e:
+        #         print(e)
+        #         print(query)
 
-                continue
+        #         continue
 
 def find_pdf_metadata(url):
     response = requests.get(url)
@@ -72,10 +79,10 @@ def find_pdf_metadata(url):
     pdf = pdfplumber.open(pdf_buffer)
 
     metadata = pdf.metadata
-    date = metadata["ModDate"]
+    date = None #metadata["ModDate"]
     title = metadata["Title"]
 
-    return parse_date(date), title
+    return date, title#parse_date(date), title
 
 def find_sublist(nested_list, target):
     # 재귀적으로 모든 단계의 중첩 리스트를 탐색
@@ -110,10 +117,3 @@ def pdf_parse_search(url, keyword):
     else:
         page_result = "No result"
     return page_result
-
-########################## 코드영역 ##########################
-
-with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
-    with conn.cursor() as cur:
-        pdf_settitle(cur)
-        conn.commit()

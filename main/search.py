@@ -20,10 +20,16 @@ def main(sidemenu):
     tag = request.args.get('tag', '')
     page = int(request.args.get('page', 1))
     filedownload = request.args.get('filedownload', False, type=bool)
+    
     if request.cookies.get('topMenu') != None:
         id = loads(unquote(request.cookies.get('topMenu')))
     else:
         id = {"comp": [0]}
+
+    if request.cookies.get('status') != None:
+        status = loads(unquote(request.cookies.get('status')))["filter"]
+    else:
+        status = False
 
     per_page = 15
     offset = (page - 1) * per_page
@@ -35,7 +41,7 @@ def main(sidemenu):
     query_count = ""
 
     if sidemenu == "fileparses":
-        file_temp_table(cur, id)
+        file_temp_table(cur, id, status)
         if tag:
             query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
             query_count += f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
@@ -44,7 +50,7 @@ def main(sidemenu):
             query_count += f"SELECT count(*) FROM temp_fileresult"
 
     elif sidemenu == "neednot":
-        def_temp_table(cur, id)
+        def_temp_table(cur, id, status)
         if tag:
             query_dat += SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
             query_count += COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
@@ -53,7 +59,7 @@ def main(sidemenu):
             query_count += COUNTQUERY + f" WHERE tags = 'is_neednot'"
 
     else:
-        def_temp_table(cur, id)
+        def_temp_table(cur, id, status)
         if sidemenu == "content":
             query_dat = SELECTQUERY
             query_count = COUNTQUERY
@@ -124,13 +130,19 @@ def result(sidemenu):
     tag = request.args.get('tag', '')
     menu = request.args.get('menu', '')
     key = request.args.get('key', '')
-    filedownload = request.args.get('filedownload', False, type=bool)
 
+    filedownload = request.args.get('filedownload', False, type=bool)
     page = int(request.args.get('page', 1))
+
     if request.cookies.get('topMenu') != None:
         id = loads(unquote(request.cookies.get('topMenu')))
     else:
         id = {"comp": [0]}
+
+    if request.cookies.get('status') != None:
+        status = loads(unquote(request.cookies.get('status')))["filter"]
+    else:
+        status = False
         
     per_page = 15
     offset = (page - 1) * per_page
@@ -145,7 +157,7 @@ def result(sidemenu):
     query_count = ""
 
     if sidemenu == "fileparses":
-        file_temp_table(cur, id)
+        file_temp_table(cur, id, status)
         if menu and key and tag:
             query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
             query_count += f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
@@ -164,7 +176,7 @@ def result(sidemenu):
 
 
     elif sidemenu == "neednot":
-        def_temp_table(cur, id)
+        def_temp_table(cur, id, status)
         if menu and key and tag:
             query_dat += SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s' AND sr.{menu} LIKE %s AND tags = 'is_neednot'" % (tag, f'"%{key}%"')
             query_count += COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s' AND sr.{menu} LIKE %s AND tags = 'is_neednot'" % (tag, f'"%{key}%"')
@@ -183,7 +195,7 @@ def result(sidemenu):
 
     else:
         if menu and key:
-            def_temp_table(cur, id)
+            def_temp_table(cur, id, status)
             if sidemenu == "content":
                 query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
                 query_count += COUNTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
@@ -272,18 +284,18 @@ def dashboard():
         query = '''
         SELECT 	cmp.company,
                 COUNT(*) AS totalcount,
-                COUNT(CASE WHEN tags NOT LIKE '' THEN 1 END) AS tagcount,
-                COUNT(CASE WHEN tags LIKE 'is_login' THEN 1 END) AS logincount,
-                COUNT(CASE WHEN tags LIKE 'is_admin' THEN 1 END) AS admincount,
-                COUNT(CASE WHEN tags LIKE 'is_file' THEN 1 END) AS filecount,
-                COUNT(CASE WHEN tags LIKE 'is_neednot' THEN 1 END) AS nncount,
-                COUNT(CASE WHEN tags LIKE 'is_github' THEN 1 END) AS gitcount
+                COUNT(CASE WHEN tags NOT LIKE '' AND tags NOT LIKE 'filter' THEN 1 END) AS tagcount,
+                COUNT(CASE WHEN FIND_IN_SET('is_login', tags) THEN 1 END) AS logincount,
+                COUNT(CASE WHEN FIND_IN_SET('is_admin', tags) THEN 1 END) AS admincount,
+                COUNT(CASE WHEN FIND_IN_SET('is_file', tags) THEN 1 END) AS filecount,
+                COUNT(CASE WHEN FIND_IN_SET('is_neednot', tags) THEN 1 END) AS nncount,
+                COUNT(CASE WHEN FIND_IN_SET('is_github', tags) THEN 1 END) AS gitcount
         FROM 	list_company cmp
         JOIN 	conn_comp_root ccr ON cmp.id = ccr.comp_id
         JOIN 	conn_root_sub crs ON ccr.root_id = crs.root_id
         JOIN 	conn_sub_res csr ON crs.sub_id = csr.sub_id
         JOIN 	search_result sr ON csr.res_id = sr.id
-        WHERE   ccr.comp_id = %s;
+        WHERE   cmp.id = %s;
         '''
         data += query_database(query, (id, ))
 

@@ -1,5 +1,9 @@
 import pymysql
 
+# filter 태그가 달렸으면 필터링 당하는 대상
+FILTER_STATUS = " AND FIND_IN_SET('filter', tags) < 1 "
+CREATE_DEF_TABLE = "CREATE TEMPORARY TABLE temp_searchresult AS SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id "
+
 def query_database(query, args=(), one=False):
     conn = pymysql.connect(host='192.168.6.90',
                            user='root',
@@ -23,53 +27,62 @@ def database_connect():
                            charset='utf8mb4')
     return conn
 
-def def_temp_table(cur, id):
+def def_temp_table(cur, id, status):
+    filter = ""
+    if status: filter = FILTER_STATUS
+
     if id["comp"][0] == 0:
-        temp_table_query =  '''CREATE TEMPORARY TABLE temp_searchresult AS
-                            SELECT se, subdomain, title, url, content, tags, id
-                            FROM search_result;'''
+        temp_table_query = CREATE_DEF_TABLE + 'FROM search_result sr WHERE 1=1' + filter + ' ORDER BY sr.tags'
         cur.execute(temp_table_query)
+        
     elif id["root"][0] == 0:
-        temp_table_query =  '''CREATE TEMPORARY TABLE temp_searchresult AS
-                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
+        temp_table_query =  CREATE_DEF_TABLE + filter + '''
                             FROM conn_comp_root ccr
                             JOIN conn_root_sub crs ON ccr.root_id = crs.root_id
                             JOIN conn_sub_res csr ON crs.sub_id = csr.sub_id
                             JOIN search_result sr ON csr.res_id = sr.id
                             WHERE ccr.comp_id = %s
+                            ''' + filter + '''
                             UNION
                             SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
                             FROM conn_comp_root ccr
                             JOIN conn_root_res crr ON ccr.root_id = crr.root_id
                             JOIN search_result sr ON crr.res_id = sr.id
-                            WHERE ccr.comp_id = %s;'''
+                            WHERE ccr.comp_id = %s
+                            ''' + filter + ';'
         cur.execute(temp_table_query, (id["comp"][0], id["comp"][0], ))
     elif id["sub"][0] == 0:
-        temp_table_query =  '''CREATE TEMPORARY TABLE temp_searchresult AS
-                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
+        temp_table_query =  CREATE_DEF_TABLE + filter + '''
                             FROM conn_root_sub crs
                             JOIN conn_sub_res csr ON crs.sub_id = csr.sub_id
                             JOIN search_result sr ON csr.res_id = sr.id
                             WHERE crs.root_id = %s
+                            ''' + filter + '''
                             UNION
-                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags
+                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
                             FROM conn_root_res crr
                             JOIN search_result sr ON crr.res_id = sr.id
-                            WHERE crr.root_id = %s;'''
+                            WHERE crr.root_id = %s
+                            ''' + filter + ';'
         cur.execute(temp_table_query, (id["root"][0], id["root"][0],))
     else:
-        temp_table_query =  '''CREATE TEMPORARY TABLE temp_searchresult AS
-                            SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id
+        temp_table_query =  CREATE_DEF_TABLE + filter + '''
                             FROM conn_sub_res csr
                             JOIN search_result sr ON csr.res_id = sr.id
-                            WHERE csr.sub_id = %s;'''
+                            WHERE csr.sub_id = %s
+                            ''' + filter + ';'
         cur.execute(temp_table_query, (id["sub"][0],))
 
-def file_temp_table(cur, id):
+def file_temp_table(cur, id, status):
+    filter = ""
+    if status: filter = FILTER_STATUS
+
     if id["comp"][0] == 0:
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_fileresult
                             AS SELECT fl.*, sr.se FROM list_file fl
                             JOIN search_result sr ON sr.id = fl.id
+                            WHERE 1=1
+                            ''' + filter + '''
                             ORDER BY fl.moddate DESC;'''
         cur.execute(temp_table_query)
     elif id["root"][0] == 0:
@@ -80,6 +93,7 @@ def file_temp_table(cur, id):
                             JOIN list_file fl ON csr.res_id = fl.id
                             JOIN search_result sr ON sr.id = fl.id
                             WHERE ccr.comp_id = %s
+                            ''' + filter + '''                            
                             ORDER BY fl.moddate DESC;'''
         cur.execute(temp_table_query, (id["comp"][0],))
     elif id["sub"][0] == 0:
@@ -89,6 +103,7 @@ def file_temp_table(cur, id):
                             JOIN list_file fl ON csr.res_id = fl.id
                             JOIN search_result sr ON sr.id = fl.id
                             WHERE crs.root_id = %s
+                            ''' + filter + '''
                             ORDER BY fl.moddate DESC;
                             '''
         cur.execute(temp_table_query, (id["root"][0],))
@@ -96,8 +111,9 @@ def file_temp_table(cur, id):
         temp_table_query =  '''CREATE TEMPORARY TABLE temp_fileresult SELECT fl.*, sr.se
                             FROM conn_sub_res csr
                             JOIN list_file fl ON csr.res_id = fl.id
-                            JOIN search_result sr ON sr.id = fl.id   
+                            JOIN search_result sr ON sr.id = fl.id
                             WHERE csr.sub_id = %s
+                            ''' + filter + '''
                             ORDER BY fl.moddate DESC;
                             '''
         cur.execute(temp_table_query, (id["sub"][0],))

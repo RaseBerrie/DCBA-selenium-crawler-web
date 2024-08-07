@@ -12,7 +12,10 @@
 
 <script>
 $("#restart").on("click", function() {
-    $.removeCookie('crawler', { path: '/' });
+    let cookie = JSON.parse($.cookie('status'));
+    cookie.crawler = false;
+
+    $.cookie('status', JSON.stringify(cookie));
     location.reload();
 });
 </script>

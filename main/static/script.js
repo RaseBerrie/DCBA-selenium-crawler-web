@@ -161,10 +161,18 @@ function topMenu() {
         $('#drop-3').text("서브 도메인");
         $('#third-level-menu').html(DROPTHREE);
 
-        var cookie = {"comp": [Number(id), concept], "root": [0, "루트 도메인"], "sub": [0, "서브 도메인"]};
+        var cookie = JSON.parse($.cookie("topMenu"));
+        cookie.comp = [Number(id), concept]; cookie.root = [0, "루트 도메인"]; cookie.sub = [0, "서브 도메인"];
         $.cookie("topMenu", JSON.stringify(cookie));
 
-        $(".selected").trigger("click");
+        if (queryed) {
+            page = 1;
+            loadResults(true, pagename);
+        }
+        else {
+            page = 1;
+            loadInitiateResults(true, pagename);
+        }
     });
 
     $('.nav-tabs #drop-btn-2').find('a').click(function(e) {
@@ -180,7 +188,14 @@ function topMenu() {
         cookie.root = [Number(id), concept]; cookie.sub = [0, "서브 도메인"];
         $.cookie("topMenu", JSON.stringify(cookie));
 
-        $(".selected").trigger("click");
+        if (queryed) {
+            page = 1;
+            loadResults(true, pagename);
+        }
+        else {
+            page = 1;
+            loadInitiateResults(true, pagename);
+        }
     });
 
     $('.nav-tabs #drop-btn-3').find('a').click(function(e) {
@@ -192,7 +207,55 @@ function topMenu() {
         var cookie = JSON.parse($.cookie("topMenu")); cookie.sub = [Number(id), concept];
         $.cookie("topMenu", JSON.stringify(cookie));
 
-        $(".selected").trigger("click");
+        loadInitiateResults(true, pagename);
+    });
+}
+
+function loadContent() {
+    if(pagename.substr(1) != 'neednot' && pagename != '/fileparses') $('.btn-group').hide();
+    $('#' + pagename.substr(1)).addClass("selected");
+
+    var cookie = JSON.parse($.cookie('status'));
+    $('input:checkbox[id="filter"]').prop('checked', cookie.filter);
+
+    $('input:checkbox[id="filter"]').on('click', function() {
+        cookie.filter = !cookie.filter;
+        $.cookie("status", JSON.stringify(cookie));        
+        $('input:checkbox[id="filter"]').prop('checked', cookie.filter);
+
+        if (queryed) {
+            page = 1;
+            loadResults(true, pagename);
+        }
+        else {
+            page = 1;
+            loadInitiateResults(true, pagename);
+        }
+    });
+
+    $('#searchForm').on('submit', function(event) {
+        event.preventDefault();
+        $('#results').empty();
+
+        page = 1;
+        queryed = true;
+        loadResults(true, pagename);
+    });
+
+    $('.tags').on('click', function(event) {
+        event.preventDefault();
+        $('#results').empty();
+
+        $(this).addClass('active').siblings().removeClass('active');
+
+        if (queryed) {
+            page = 1;
+            loadResults(true, pagename);
+        }
+        else {
+            page = 1;
+            loadInitiateResults(true, pagename);
+        }
     });
 }
 
@@ -287,6 +350,7 @@ function loadDashBoard() {
         }};
 
     $.get('dashboard/default', function(data) {
+        console.log(data);
         data.slice(1).forEach(row => {
             let tagSum = row[2];
             row.slice(3).forEach(
@@ -357,7 +421,8 @@ function loadDashBoard() {
                             callback: function(value, _index, _values) {
                                 return value * 100;
                             }
-                        }
+                        },
+                        max: 1
                     },
                     y: { stacked: true }
                 },
@@ -480,7 +545,7 @@ function loadDashBoard() {
     }); //END of GET
 }
 
-function loadInitiateResults(reset, pagename) {
+function loadInitiateResults(_reset, pagename) {
     if (loading) return;
     loading = true;
 
@@ -498,8 +563,6 @@ function loadInitiateResults(reset, pagename) {
     }
 
     $.get(pagename + '/default', { tag: tag, page: page }, function(data) {
-        if (reset) endofdata = false;
-
         $('#results').empty();
         $('#results').append(data);
         $('#loading').hide();
@@ -567,5 +630,19 @@ function loadResults(_reset, pagename) {
             loading = false;
             $('#page-' + String(page)).addClass('active');
         });
-    } else location.reload();
+    } else {
+        $.get(pagename + '/default', { tag: tag, page: page }, function(data) {
+            $('#results').empty();
+            $('#results').append(data);
+            $('#loading').hide();
+    
+            var count = $('#count-result').text();
+            $('.top-total strong').text(count);
+    
+            searchMenu(); foldableButton(); pagingButtons();
+    
+            loading = false;
+            $('#page-' + String(page)).addClass('active');
+        });
+    }
 }

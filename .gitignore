@@ -178,3 +178,4 @@ pyrightconfig.json
 # etc
 assets/selenium-server-4.20.0.jar
 .vscode/
+memo.md
