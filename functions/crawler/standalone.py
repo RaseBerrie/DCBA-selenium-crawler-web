@@ -74,6 +74,8 @@ def main():
 
         elif menu_result == "Find SUBDOMAINs and make connections":
             dbbuilder.dbbuild()
+            dbbuilder.dbbuild_root()
+
             questionary.print("Process done successfully! 🥰\n", style="fg:ansiblack")
 
             menu_result = start_menu()

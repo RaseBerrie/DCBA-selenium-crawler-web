@@ -30,7 +30,6 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         elif (tmp.count('kr') == 1):
             if tmp.count('or') == 1:
@@ -39,7 +38,6 @@ def url_fining_process(cur):
 
                 tmplist = tmp[found:]
                 tmpstr = ".".join(tmplist)
-                print("FINED: " + tmpstr + "\n")
                 s.add(tmpstr)
             elif tmp.count('co') == 1:
                 found = tmp.index('co')
@@ -47,7 +45,6 @@ def url_fining_process(cur):
 
                 tmplist = tmp[found:]
                 tmpstr = ".".join(tmplist)
-                print("FINED: " + tmpstr + "\n")            
                 s.add(tmpstr)
             else:
                 found = tmp.index('kr')
@@ -55,7 +52,6 @@ def url_fining_process(cur):
 
                 tmplist = tmp[found:]
                 tmpstr = ".".join(tmplist)
-                print("FINED: " + tmpstr + "\n")            
                 s.add(tmpstr)
         elif tmp.count('jp') == 1:
             found = tmp.index('jp')
@@ -63,7 +59,6 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         elif tmp.count('net') == 1:
             found = tmp.index('net')
@@ -71,7 +66,6 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         elif ((tmp.count('co') == 1) and (tmp.count('uk') == 1)):
             found = tmp.index('co')
@@ -79,7 +73,6 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         elif tmp.count('ca') == 1:
             found = tmp.index('ca')
@@ -87,7 +80,6 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         elif tmp.count('uz') == 1:
             found = tmp.index('uz')
@@ -95,7 +87,6 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         elif tmp.count('in') == 1:
             found = tmp.index('in')
@@ -103,7 +94,6 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         elif tmp.count('cn') == 1:
             found = tmp.index('cn')
@@ -111,7 +101,6 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         elif ((tmp.count('co') == 1) and (tmp.count('uk') == 1)):
             found = tmp.index('co')
@@ -119,16 +108,9 @@ def url_fining_process(cur):
 
             tmplist = tmp[found:]
             tmpstr = ".".join(tmplist)
-            print("FINED: " + tmpstr + "\n")
             s.add(tmpstr)
         else:
-            print("[### FAILED ###]\n")
             notfoundcount = notfoundcount + 1
-
-    print("================================\n")
-    print("TOTAL: " + str(len(datas)))
-    print("FINED: " + str(len(s)))
-    print("FAILED: " + str(notfoundcount))
 
     for line in s:
         cur.execute("INSERT IGNORE INTO domain_root(root_url) VALUES('{0}')".format(line))

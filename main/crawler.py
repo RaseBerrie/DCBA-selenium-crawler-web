@@ -79,7 +79,7 @@ def start():
     resp = make_response(render_template('crawler_inprocess.html', processing=True))
     cookie["crawler"] = True
 
-    resp.set_cookie("status", quote(json.dumps(cookie)), path='/', max_age=600)
+    resp.set_cookie("status", quote(json.dumps(cookie)), path='/')
     return resp
 
 ####################    링크 추가       ####################
@@ -115,7 +115,7 @@ def addlinks():
     with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
         with conn.cursor() as cur:
             for key in result[comp]:
-                query = 'INSERT INTO search_key(company, search_key) VALUES("{0}", "{1}")'.format(comp, key)
+                query = 'INSERT IGNORE INTO search_key(company, search_key) VALUES("{0}", "{1}")'.format(comp, key)
                 cur.execute(query)
             conn.commit()
 

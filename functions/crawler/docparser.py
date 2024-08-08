@@ -1,7 +1,6 @@
 from urllib import parse
 from datetime import datetime, timedelta
 
-import pymysql
 import pdfplumber
 import requests
 import io
