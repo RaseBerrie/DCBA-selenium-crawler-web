@@ -7,7 +7,7 @@
             "args": [
                 "-jar", "C:\\Users\\itf\\Documents\\selenium-search\\assets\\selenium-server-4.20.0.jar", "standalone",
 		        "--log-level", "warning",
-                "--session-timeout", "10",
+                "--session-timeout", "60",
                 "--log", "C:\\Users\\itf\\Documents\\selenium-search\\logs\\selenium_error.log",
                 "--structured-logs", "true",
                 "--tracing", "false"

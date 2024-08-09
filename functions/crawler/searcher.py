@@ -40,7 +40,7 @@ def cut_string_including_substring(main_string, substring):
     return main_string
 
 def decode_base64(s):
-  result = base64.b64decode(s.replace("\_", "/") + '====').decode('utf-8')
+  result = base64.b64decode(s.replace("\\_", "/") + '====').decode('utf-8')
   return result
 
 def driver_setup():
@@ -209,7 +209,9 @@ def google_search(originalurl, target="default"):
 def bing_search(originalurl, target="default"):
   logging.basicConfig(filename='C:\\Users\\itf\\Documents\\selenium-search\\logs\\crawler_error.log', level=logging.WARNING, encoding="utf-8")
   driver = driver_setup()
+
   searchkey = ''
+  nextpage_link = ''
 
   if target == "github": searchkey = "site:github.com " + originalurl
   else: searchkey = "site:" + originalurl
@@ -227,6 +229,7 @@ def bing_search(originalurl, target="default"):
     scrolltoend_bing(driver)
     time.sleep(PAUSE_SEC)
 
+    scrolltoend_bing(driver)    
     resultfield = driver.find_element(By.ID, 'b_results')
     try:
       res_content = resultfield.find_elements(By.TAG_NAME, 'p')
@@ -277,7 +280,16 @@ def bing_search(originalurl, target="default"):
     except Exception as e: ERROR_CONTROL(originalurl, e)
 
     time.sleep(PAUSE_SEC)
-    try: driver.find_element(By.CLASS_NAME, 'sw_next').find_element(By.XPATH, '..').click()
+    try:
+      nextpage = driver.find_element(By.CLASS_NAME, 'sw_next').find_element(By.XPATH, '..')
+      tmp_link = nextpage.get_attribute('href')
+
+      if nextpage_link == tmp_link:
+        ERROR_CONTROL(originalurl, "ERROR", isexit=True)
+      else:
+        nextpage_link = tmp_link
+        driver.get(nextpage_link)
+
     except: break
 
   driver.quit()

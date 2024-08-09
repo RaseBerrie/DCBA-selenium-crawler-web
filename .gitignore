@@ -176,6 +176,8 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 # etc
-assets/selenium-server-4.20.0.jar
 .vscode/
+
+assets/selenium-server-4.20.0.jar
+app.wsgi
 memo.md

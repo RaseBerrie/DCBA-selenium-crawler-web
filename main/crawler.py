@@ -68,9 +68,9 @@ def start():
     cookie = json.loads(unquote(request.cookies.get("status")))
     args = dict()
 
-    args["google"] = True
+    args["google"] = False
     args["bing"] = True
-    args["github_google"] = True
+    args["github_google"] = False
     args["github_bing"] = True
 
     json_val = json.dumps(args)
