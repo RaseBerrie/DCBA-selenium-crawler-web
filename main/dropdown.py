@@ -1,5 +1,5 @@
 from main import *
-from functions.dbconnect import query_database
+from functions.database.utils import database_query
 
 from flask import Blueprint, render_template
 dropdown = Blueprint('dropdown', __name__, template_folder='templates/dropdown')
@@ -21,7 +21,7 @@ def first_level():
     JOIN conn_comp_root ccr ON c.id = ccr.comp_id
     GROUP BY c.id, c.company;
     '''
-    categories = query_database(query)
+    categories = database_query(query)
 
     return render_template('first_level.html', categories=categories)
 
@@ -38,7 +38,7 @@ def second_level(category_id):
     WHERE cr.comp_id = %d
     GROUP BY rd.id, rd.root_url;
     ''' % (category_id)
-    categories = query_database(query)
+    categories = database_query(query)
     return render_template('second_level.html', categories=categories)
 
 @dropdown.route('/thirdlevel/<int:category_id>')
@@ -52,5 +52,5 @@ def third_level(category_id):
         JOIN domain_sub sd ON cs.sub_id = sd.id
         WHERE cs.root_id = {0};
     '''.format(category_id)
-    categories = query_database(query)
+    categories = database_query(query)
     return render_template('third_level.html', categories=categories)

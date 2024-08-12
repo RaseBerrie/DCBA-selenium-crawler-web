@@ -4,12 +4,16 @@ import pymysql
 FILTER_STATUS = " AND FIND_IN_SET('filter', tags) < 1 "
 CREATE_DEF_TABLE = "CREATE TEMPORARY TABLE temp_searchresult AS SELECT sr.se, sr.subdomain, sr.title, sr.url, sr.content, sr.tags, sr.id "
 
-def query_database(query, args=(), one=False):
+def database_connect():
     conn = pymysql.connect(host='192.168.6.90',
                            user='root',
                            password='root',
                            db='searchdb',
-                           charset='utf8mb4') 
+                           charset='utf8mb4')
+    return conn
+
+def database_query(query, args=(), one=False):
+    conn = database_connect()
     cur = conn.cursor()
     cur.execute(query, args)
 
@@ -18,14 +22,6 @@ def query_database(query, args=(), one=False):
     conn.close()
 
     return (r[0] if r else None) if one else r
-
-def database_connect():
-    conn = pymysql.connect(host='192.168.6.90',
-                           user='root',
-                           password='root',
-                           db='searchdb',
-                           charset='utf8mb4')
-    return conn
 
 def def_temp_table(cur, id, status):
     filter = ""

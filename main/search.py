@@ -8,7 +8,7 @@ from json import loads
 from io import BytesIO
 
 from main import *
-from functions.dbconnect import query_database, database_connect, def_temp_table, file_temp_table, data_fining, file_fining
+from functions.database.utils import database_query, database_connect, def_temp_table, file_temp_table, data_fining, file_fining
 import pandas as pd
 
 from flask import Blueprint, Response, request, render_template, jsonify
@@ -266,7 +266,7 @@ def result(sidemenu):
 @search.route('/dashboard/default', methods=['GET'])
 def dashboard():
     query = 'SELECT id FROM list_company'
-    ids = query_database(query)
+    ids = database_query(query)
     count = len(ids)
 
     data = []
@@ -276,7 +276,7 @@ def dashboard():
                 COUNT(CASE WHEN Google NOT LIKE 'N' AND GitHub_Google NOT LIKE 'N' THEN 1 END)
         FROM 	search_key
         '''
-    data += query_database(query)
+    data += database_query(query)
     
     for i in range(count):
         id = ids[i][0]
@@ -297,6 +297,6 @@ def dashboard():
         JOIN 	search_result sr ON csr.res_id = sr.id
         WHERE   cmp.id = %s;
         '''
-        data += query_database(query, (id, ))
+        data += database_query(query, (id, ))
 
     return jsonify(data)

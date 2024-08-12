@@ -1,5 +1,5 @@
 from main import *
-from functions.dbconnect import query_database
+from functions.database.utils import database_query
 from functions.crawler.module import process_start
 from functions.crawler.dbbuilder import dbbuild_module, conn_root_sub
 
@@ -57,7 +57,7 @@ def crawler_page():
 @crawler.route('/table')
 def reload():
     query = "SELECT company, search_key, bing, google, github_bing, github_google FROM search_key ORDER BY id DESC"
-    datas = query_database(query)
+    datas = database_query(query)
 
     return render_template('tab_one.html', datas=datas)
 
@@ -130,14 +130,14 @@ def addlinks():
             conn.commit()
 
             query = 'SELECT id FROM list_company WHERE company = "{0}"'.format(comp)
-            comp_id = query_database(query)
+            comp_id = database_query(query)
 
     with pymysql.connect(host='192.168.6.90', user='root', password='root', db='searchdb', charset='utf8mb4') as conn:
         with conn.cursor() as cur:            
             query = '''SELECT rd.id FROM domain_root rd
                     LEFT JOIN conn_comp_root ccr ON rd.id = ccr.root_id
                     WHERE ccr.comp_id IS NULL'''
-            ids = query_database(query)
+            ids = database_query(query)
 
             if str(type(ids)) != "<class 'int'>":
                 for id in ids:
