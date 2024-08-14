@@ -4,7 +4,7 @@ import json
 import urllib.parse as parse
 
 from flask import Blueprint, render_template, make_response, request
-index = Blueprint('index', __name__, template_folder='templates/contents')
+index = Blueprint('index', __name__, template_folder='templates/frame')
 
 @index.route('/')
 @index.route('/dashboard')
@@ -24,7 +24,7 @@ def others():
 
 @index.route('/<sidemenu>')
 def contents(sidemenu):
-    if sidemenu != "fileparses":
+    if sidemenu != "fileparse":
         return render_template('default_content.html')
     else:
         return render_template('file_content.html')

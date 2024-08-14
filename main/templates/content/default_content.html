@@ -6,7 +6,7 @@
         <button class="btn btn-primary border border-light-subtle" id="download">
             CSV 다운로드
         </button>
-        <div class="btn-group border border-light-subtle" role="group">
+        <div class="btn-group border border-light-subtle d-none" role="group">
             <button class="btn btn-light border-light-subtle tags">에러 페이지</button>
             <button class="btn btn-light border-start border-light-subtle tags">샘플 페이지</button>
             <button class="btn btn-light border-start border-light-subtle tags">서버 정보 노출</button>
@@ -41,7 +41,7 @@
     <div class="top-total">
         검색 결과: <strong></strong>개
     </div>
-    <div class="d-flex align-items-center mb-1">
+    <div class="d-flex align-items-center mb-1 d-none" id="public-filter">
         <p class="ms-auto my-auto lh-1 text-body-tertiary">데이터 필터링</p>
         <label class="switch mx-1">
             <input id="filter" type="checkbox">
