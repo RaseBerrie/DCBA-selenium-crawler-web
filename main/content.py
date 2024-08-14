@@ -8,11 +8,11 @@ from json import loads
 from io import BytesIO
 
 from main import *
-from functions.database.utils import database_query, database_connect, def_temp_table, file_temp_table, data_fining, file_fining
+from functions.utils import database_query, database_connect, def_temp_table, file_temp_table, data_fining, file_fining
 import pandas as pd
 
 from flask import Blueprint, Response, request, render_template, jsonify
-search = Blueprint('search', __name__, template_folder='templates/contents')
+search = Blueprint('search', __name__, template_folder='templates/content')
 
 @search.route('/<sidemenu>/default', methods=['GET'])
 def main(sidemenu):
@@ -43,20 +43,25 @@ def main(sidemenu):
     if sidemenu == "fileparses":
         file_temp_table(cur, id, status)
         if tag:
-            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
+            query_dat += f"SELECT se, filetype, title, url, data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
             query_count += f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
         else:
-            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult"
+            query_dat += f"SELECT se, filetype, title, url, data, moddate FROM temp_fileresult"
             query_count += f"SELECT count(*) FROM temp_fileresult"
 
     elif sidemenu == "neednot":
         def_temp_table(cur, id, status)
         if tag:
-            query_dat += SELECTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
-            query_count += COUNTQUERY + f" sr JOIN list_neednot lnn ON lnn.id = sr.id WHERE lnn.restype = '%s'" % (tag)
+            query_dat += SELECTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s'" % (tag)
+            query_count += COUNTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s'" % (tag)
         else:
-            query_dat += SELECTQUERY + f" WHERE tags = 'is_neednot'"
-            query_count += COUNTQUERY + f" WHERE tags = 'is_neednot'"
+            query_dat += SELECTQUERY + f" WHERE tags = 'expose'"
+            query_count += COUNTQUERY + f" WHERE tags = 'expose'"
+
+    elif sidemenu == "gitsearch":
+        def_temp_table(cur, id, status, git=True)
+        query_dat += SELECTQUERY
+        query_count += COUNTQUERY
 
     else:
         def_temp_table(cur, id, status)
@@ -65,20 +70,12 @@ def main(sidemenu):
             query_count = COUNTQUERY
         
         elif sidemenu == "loginpage":
-            query_dat += SELECTQUERY + f" WHERE tags = 'is_login'"
-            query_count += COUNTQUERY + f" WHERE tags = 'is_login'"
+            query_dat += SELECTQUERY + f" WHERE tags = 'login'"
+            query_count += COUNTQUERY + f" WHERE tags = 'login'"
         
         elif sidemenu == "adminpage":
-            query_dat += SELECTQUERY + f" WHERE tags = 'is_admin'"
-            query_count += COUNTQUERY + f" WHERE tags = 'is_admin'"
-
-        elif sidemenu == "gitsearch":
-            query_dat += SELECTQUERY + f" WHERE tags = 'is_github'"
-            query_count += COUNTQUERY + f" WHERE tags = 'is_github'"
-
-        elif sidemenu == "jssearch":
-            query_dat += SELECTQUERY + f" WHERE tags = 'is_js'"
-            query_count += COUNTQUERY + f" WHERE tags = 'is_js'"
+            query_dat += SELECTQUERY + f" WHERE tags = 'admin'"
+            query_count += COUNTQUERY + f" WHERE tags = 'admin'"
 
     if not filedownload:
         query_dat = query_dat + " LIMIT %s OFFSET %s" % (per_page, offset)

@@ -2,9 +2,9 @@ from flask import Flask
 
 app = Flask(__name__)
 
-from main.search import search
-from main.dropdown import dropdown
-from main.crawler import crawler
+from main.content import search
+from main.nav import dropdown
+from main.connect import crawler
 from main.index import index
 
 app.register_blueprint(search)
