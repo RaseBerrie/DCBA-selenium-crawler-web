@@ -1,18 +1,9 @@
 import pymysql
 
 # filter_public 태그가 달렸으면 필터링 당하는 대상
-FILTER_STATUS = '''
-                AND FIND_IN_SET('public', tags) < 1
-                '''
-CREATE_DEF_TABLE =  '''
-                    CREATE TEMPORARY TABLE temp_searchresult
-                    SELECT con.* FROM res_data_content con
-                    '''
-CREATE_FILE_TABLE = '''
-                    CREATE TEMPORARY TABLE temp_fileresult
-                    SELECT DISTINCT con.searchengine as se, t_file.* FROM res_data_content con
-                    JOIN res_tags_file t_file ON t_file.url = con.res_url
-                    '''
+FILTER_STATUS = ' AND FIND_IN_SET("public", tags) < 1'
+CREATE_DEF_TABLE = 'CREATE TEMPORARY TABLE temp_searchresult SELECT con.* FROM res_data_content con'
+CREATE_FILE_TABLE = 'CREATE TEMPORARY TABLE temp_fileresult SELECT DISTINCT searchengine as se, t_file.* FROM res_data_content con JOIN res_tags_file t_file ON t_file.url = con.res_url'
 
 def database_connect():
     conn = pymysql.connect(host='192.168.6.90',
@@ -41,7 +32,7 @@ def def_temp_table(cur, id, status, git=False):
     else: find_in_set = '<'
 
     if id["comp"][0] == 0:
-        temp_table_query =  CREATE_DEF_TABLE + f'WHERE FIND_IN_SET("git", tags) {find_in_set} 1' + filter_public
+        temp_table_query =  CREATE_DEF_TABLE + f' WHERE FIND_IN_SET("git", tags) {find_in_set} 1' + filter_public
 
     elif id["root"][0] == 0:
         temp_table_query =  CREATE_DEF_TABLE + f'''

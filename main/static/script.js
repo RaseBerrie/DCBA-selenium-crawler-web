@@ -110,18 +110,18 @@ function downloadButton(pagename) {
                 }
             } else tag = ''
 
-            if(pagename === "/fileparses") {
+            if(pagename === "/fileparse") {
                 switch(menu) {
                     case "파일 이름": param = 'title'; break;
-                    case "주요 데이터": param = 'parsed_data'; break;
+                    case "주요 데이터": param = 'data'; break;
                     default: param = '';
                 }
             } else {
                 switch(menu) {
                     case "서브도메인": param = 'subdomain'; break;
-                    case "제목": param = 'title'; break;
-                    case "URL": param = 'url'; break;
-                    case "콘텐츠": param = 'content'; break;
+                    case "제목": param = 'res_title'; break;
+                    case "URL": param = 'res_url'; break;
+                    case "콘텐츠": param = 'res_content'; break;
                     default: param = '';
                 }
             }
@@ -212,7 +212,9 @@ function topMenu() {
 }
 
 function loadContent() {
-    if(pagename.substr(1) != 'neednot' && pagename != '/fileparses') $('.btn-group').hide();
+    if(pagename.substr(1) == 'expose' || pagename == '/fileparse') $('.btn-group').removeClass('d-none');
+    if(pagename == '/content') $('#public-filter').removeClass('d-none');
+
     $('#' + pagename.substr(1)).addClass("selected");
 
     var cookie = JSON.parse($.cookie('status'));
@@ -550,7 +552,7 @@ function loadInitiateResults(_reset, pagename) {
     loading = true;
 
     let tag = '';
-    if(pagename == "/fileparses" || pagename == "/neednot") {
+    if(pagename == "/fileparse" || pagename == "/expose") {
         if($(".top-align-box").find(".active").text() != undefined) {
             tag = $(".top-align-box").find(".active").text();
             switch(tag) {
@@ -587,11 +589,11 @@ function loadResults(_reset, pagename) {
     let tag = '';
     let param;
 
-    if(pagename == "/fileparses" || pagename == "/neednot") {
-        if(pagename === "/fileparses") {
+    if(pagename == "/fileparse" || pagename == "/expose") {
+        if(pagename === "/fileparse") {
             switch(menu) {
                 case "파일 이름": param = 'title'; break;
-                case "주요 데이터": param = 'parsed_data'; break;
+                case "주요 데이터": param = 'data'; break;
                 default: param = '';
             }}
         if($(".top-align-box").find(".active").text() != undefined) {
@@ -606,12 +608,12 @@ function loadResults(_reset, pagename) {
         }
     }
     
-    if(pagename != "/fileparses") {
+    if(pagename != "/fileparse") {
         switch(menu) {
             case "서브도메인": param = 'subdomain'; break;
-            case "제목": param = 'title'; break;
-            case "URL": param = 'url'; break;
-            case "콘텐츠": param = 'content'; break;
+            case "제목": param = 'res_title'; break;
+            case "URL": param = 'res_url'; break;
+            case "콘텐츠": param = 'res_content'; break;
             default: param = '';
         }
     }

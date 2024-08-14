@@ -24,7 +24,7 @@ def others():
 
 @index.route('/<sidemenu>')
 def contents(sidemenu):
-    if sidemenu != "fileparses":
+    if sidemenu != "fileparse":
         return render_template('default_content.html')
     else:
         return render_template('file_content.html')
