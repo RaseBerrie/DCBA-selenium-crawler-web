@@ -2,14 +2,14 @@
 <tr>
     <td class="bg-light" style = "text-align: center;">{{ (page - 1) * 15 + i + 1 }}</td>
     <td style = "text-align: center; word-break: keep-all; font-weight: 700;">
-    {% if data[1] == 'PDF' %}
-        {{ data[1] }}
-    {% elif data[1] == 'XLSX' %}
-        <span style = "color: green;">{{ data[1] }}</span>
-    {% elif data[1] == 'PPTX' %}
-        <span style = "color: firebrick;">{{ data[1] }}</span>
-    {% elif data[1] == 'DOCX' %}
-        <span style = "color: steelblue;">{{ data[1] }}</span>
+    {% if data[2] == 'PDF' %}
+        {{ data[2] }}
+    {% elif data[2] == 'XLSX' %}
+        <span style = "color: green;">{{ data[2] }}</span>
+    {% elif data[2] == 'PPTX' %}
+        <span style = "color: firebrick;">{{ data[2] }}</span>
+    {% elif data[2] == 'DOCX' %}
+        <span style = "color: steelblue;">{{ data[2] }}</span>
     {% else %}
         {% set others = data[3].split('.') %}
         <span style = "color: darkslateblue;">{{ others[-1].upper() }}</span>
@@ -17,16 +17,16 @@
     </td>
     <td class = "text-truncate">
         <span class="badge rounded-pill text-bg-secondary">{{ data[0] }}</span>
-        {{ data[2] }}
+        {{ data[3] }}
     </td>
     <td class = "text-truncate">
-        <a href="{{ data[3] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
-            {{ data[3] }}
+        <a href="{{ data[4] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
+            {{ data[4] }}
         </a>
         <span id="count-result" style="display: none;">{{ count }}</span>
     </td>
     <td>
-        {{ data[4] }}
+        {{ data[5] }}
     </td>
 </tr>
 {% endfor %}

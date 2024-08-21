@@ -11,13 +11,12 @@ def main():
 @crawler.route('/table')
 def reload():
     query = '''
-            SELECT comp.company, req.key, g_def, b_def, g_git, b_git 
-            FROM res_data_label lab
-            JOIN req_keys req ON lab.label = req.key
-            JOIN res_closure clo ON lab.id = clo.descendant
-            JOIN list_company comp ON comp.id = clo.ancestor
-            WHERE depth > 0 AND ancestor IN (select id from list_company)
-            ORDER BY req.id DESC;
+            SELECT comp.company, req.key, b_def, g_def, b_git, g_git 
+            FROM req_keys req
+            JOIN list_subdomain sub ON req.key = sub.url
+            JOIN list_rootdomain root ON sub.rootdomain = root.url
+            JOIN list_company comp ON root.company = comp.company
+            ORDER BY b_def, g_def, b_git, g_git;
             '''
     datas = database_query(query)
 

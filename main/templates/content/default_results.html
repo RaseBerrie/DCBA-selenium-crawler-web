@@ -1,6 +1,6 @@
 {% for i, data in enumerate(datas) %}
 <tr>
-    <td class="bg-light" style="text-align: center;">{{ (page - 1) * 15 + i + 1 }}</td>
+    <td class="bg-light" style="text-align: center; word-break: keep-all;">{{ (page - 1) * 15 + i + 1 }}</td>
     <td class="text-truncate" style="overflow: hidden;">
         <span class="badge rounded-pill text-bg-secondary" style="pointer-events: none;">{{ data[0] }}</span> {{ data[1] }} 
     </td>

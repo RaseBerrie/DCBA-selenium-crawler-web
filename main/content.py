@@ -43,10 +43,10 @@ def main(sidemenu):
     if sidemenu == "fileparse":
         file_temp_table(cur, id, status)
         if tag:
-            query_dat += f"SELECT se, filetype, title, url, data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
+            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
             query_count += f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
         else:
-            query_dat += f"SELECT se, filetype, title, url, data, moddate FROM temp_fileresult"
+            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult"
             query_count += f"SELECT count(*) FROM temp_fileresult"
 
     elif sidemenu == "expose":
@@ -94,7 +94,7 @@ def main(sidemenu):
 
     if filedownload:
         if sidemenu == "fileparse":
-            head = ["SearchEngine", "FileType", "Title", "URL", "Contents"]
+            head = ["SearchEngine", "Subdomain", "FileType", "Title", "URL", "Contents"]
             result = file_fining(data)
         else:
             head = ["SearchEngine", "Subdomain", "Title", "URL", "Contents"]
@@ -156,15 +156,15 @@ def result(sidemenu):
     if sidemenu == "fileparse":
         file_temp_table(cur, id, status)
         if menu and key and tag:
-            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
+            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
             query_count += f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
 
         elif menu and key:
-            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
+            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
             query_count += f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
             
         elif tag:
-            query_dat += f"SELECT se, filetype, title, url, parsed_data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
+            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
             query_count += f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
 
     elif sidemenu == "expose":
@@ -221,7 +221,7 @@ def result(sidemenu):
 
     if filedownload:
         if sidemenu == "fileparse":
-            head = ["SearchEngine", "FileType", "Title", "URL", "Contents"]
+            head = ["SearchEngine", "Subdomain", "FileType", "Title", "URL", "Contents"]
             result = file_fining(data)
         else:
             head = ["SearchEngine", "Subdomain", "Title", "URL", "Contents"]
@@ -250,15 +250,15 @@ def result(sidemenu):
 
 @search.route('/dashboard/default', methods=['GET'])
 def dashboard():
-    query = 'SELECT lab.* FROM res_data_label lab JOIN list_company comp ON comp.company = lab.label'
+    query = 'SELECT * FROM list_company'
     ids = database_query(query)
     count = len(ids)
 
     data = []
     query = '''
     SELECT 	COUNT(*),
-    COUNT(CASE WHEN b_def LIKE 'finished' OR b_git LIKE 'finished' THEN 1 END),
-    COUNT(CASE WHEN g_def LIKE 'finished' OR g_git LIKE 'finished' THEN 1 END)
+    COUNT(CASE WHEN b_def LIKE 'finished' AND b_git LIKE 'finished' THEN 1 END),
+    COUNT(CASE WHEN g_def LIKE 'finished' AND g_git LIKE 'finished' THEN 1 END)
     FROM 	req_keys'''    
     data += database_query(query)
     
@@ -272,11 +272,11 @@ def dashboard():
         COUNT(CASE WHEN FIND_IN_SET('file', tags) THEN 1 END) AS file,
         COUNT(CASE WHEN FIND_IN_SET('expose', tags) THEN 1 END) AS expose,
         COUNT(CASE WHEN FIND_IN_SET('git', tags) THEN 1 END) AS git
-        FROM res_data_content con
-        JOIN res_data_label lab ON lab.label = con.res_url
-        JOIN res_closure clo ON lab.id = clo.descendant
-        WHERE ((ancestor = {ids[i][0]} AND depth = 3)
-        OR (ancestor = {ids[i][0]} AND depth = 2 AND lab.label REGEXP '^http'))
+        FROM res_data data
+        JOIN list_subdomain sub ON sub.url = data.subdomain
+        JOIN list_rootdomain root ON root.url = sub.rootdomain
+        JOIN list_company comp ON root.company = comp.company
+        WHERE comp.id = {ids[i][0]}
         '''
         data += database_query(query)
 

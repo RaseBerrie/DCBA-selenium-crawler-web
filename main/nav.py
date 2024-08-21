@@ -17,11 +17,7 @@ DROPTHREE = '''<li class="dropdown-item">
 
 @dropdown.route('/firstlevel', methods=['GET'])
 def first_level():
-    query = '''
-            SELECT lab.id AS company_id, lab.label
-            FROM list_company comp
-            JOIN res_data_label lab ON lab.label = comp.company
-            '''
+    query = 'SELECT * FROM list_company comp'
     categories = database_query(query)
     return render_template('first_level.html', categories=categories)
 
@@ -31,13 +27,10 @@ def second_level(category_id):
     if category_id == 0:
         return DROPTWO
     
-    query = '''
-            SELECT lab.id AS root_id, lab.label
-            FROM list_rootdomain root
-            JOIN res_data_label lab ON lab.label = root.url
-            JOIN res_closure clo ON lab.id = clo.descendant
-            WHERE clo.ancestor = {0}
-            '''.format(category_id)
+    query = '''SELECT root.id, url FROM list_rootdomain root
+    JOIN list_company comp ON root.company = comp.company
+    WHERE comp.id = {0}'''.format(category_id)
+    
     categories = database_query(query)
     return render_template('second_level.html', categories=categories)
 
@@ -47,12 +40,8 @@ def third_level(category_id):
     if category_id == 0:
         return DROPTHREE
 
-    query = '''
-            SELECT lab.id AS sub_id, lab.label
-            FROM list_subdomain sub
-            JOIN res_data_label lab ON lab.label = sub.url
-            JOIN res_closure clo ON lab.id = clo.descendant
-            WHERE clo.ancestor = {0}
-            '''.format(category_id)
+    query = '''SELECT sub.id, sub.url FROM list_subdomain sub
+    JOIN list_rootdomain root ON sub.rootdomain = root.url
+    WHERE root.id = {0} AND is_root = 0'''.format(category_id)
     categories = database_query(query)
     return render_template('third_level.html', categories=categories)

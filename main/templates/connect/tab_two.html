@@ -89,7 +89,7 @@ $('#upload').on('click', function(event) {
         form.append('data', data);
 
         $.ajax({
-            url: '/crawler/addlinks',
+            url: 'http://192.168.6.90:4000/crawler/keys',
             type: 'POST',
             data: form,
             dataType: 'json',
@@ -97,9 +97,7 @@ $('#upload').on('click', function(event) {
             contentType: false
         }).done((data)=>{
             $('#success').show().siblings('.alert').hide();
-            setTimeout(function() {
-                $('#success').hide();
-            }, 3000);
+            setTimeout(function() { $('#success').hide(); }, 3000);
         });
 
     // 링크 업로드
@@ -118,17 +116,16 @@ $('#upload').on('click', function(event) {
         $('#url-input').val('');
 
         $.ajax({
-            url: '/crawler/addlinks',
+            url: 'http://192.168.6.90:4000/crawler/keys',
             type: 'GET',
-            data: `comp=${comp}&data=${data}`,
             dataType: 'json',
-            processData: false,
-            contentType: false
-        }).done((data)=>{
+            data: {
+                "comp": comp,
+                "data": data
+            },
+        }).done((data)=>{    
             $('#success').show().siblings('.alert').hide();
-            setTimeout(function() {
-                $('#success').hide();
-            }, 3000);
+            setTimeout(function() { $('#success').hide(); }, 3000);
         });
     }
 });

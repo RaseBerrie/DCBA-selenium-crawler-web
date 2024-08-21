@@ -173,11 +173,12 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
-# End of https://www.toptal.com/developers/gitignore/api/python
+### End of https://www.toptal.com/developers/gitignore/api/python ###
+### 직접 추가한 파일 ###
 
-# etc
+# VS코드
 .vscode/
 
-assets/selenium-server-4.20.0.jar
+# 실행파일 및 메모
 app.wsgi
 memo.md

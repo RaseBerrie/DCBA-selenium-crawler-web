@@ -21,20 +21,21 @@
                 <th>Bing</th>
                 <th>Google</th>
             </tr>
-        {% for data in datas %}
-            {% if "N" in data %}
-            <tr class="table table-warning" style="border-color: inherit;">
-            {% else %}
-            <tr>
-            {% endif %}
-                <td>{{ data[0] }}</td>
-                <td>{{ data[1] }}</td>
-                <td>{{ data[2] }}</td>
-                <td>{{ data[3] }}</td>
-                <td>{{ data[4] }}</td>
-                <td>{{ data[5] }}</td>
-            </tr>
-        {% endfor %}
+
+            {% for data in datas %}
+                {% if "notstarted" in data %}
+                <tr class="table table-warning" style="border-color: inherit;">
+                {% else %}
+                <tr>
+                {% endif %}
+                    <td>{{ data[0] }}</td>
+                    <td>{{ data[1] }}</td>
+                    <td>{{ data[2] }}</td>
+                    <td>{{ data[3] }}</td>
+                    <td>{{ data[4] }}</td>
+                    <td>{{ data[5] }}</td>
+                </tr>
+            {% endfor %}
         </table>
     </div>
 

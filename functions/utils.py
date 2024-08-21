@@ -2,8 +2,8 @@ import pymysql
 
 # filter_public 태그가 달렸으면 필터링 당하는 대상
 FILTER_STATUS = ' AND FIND_IN_SET("public", tags) < 1'
-CREATE_DEF_TABLE = 'CREATE TEMPORARY TABLE temp_searchresult SELECT con.* FROM res_data_content con'
-CREATE_FILE_TABLE = 'CREATE TEMPORARY TABLE temp_fileresult SELECT DISTINCT searchengine as se, t_file.* FROM res_data_content con JOIN res_tags_file t_file ON t_file.url = con.res_url'
+CREATE_DEF_TABLE = 'CREATE TEMPORARY TABLE temp_searchresult SELECT data.* FROM res_data data'
+CREATE_FILE_TABLE = 'CREATE TEMPORARY TABLE temp_fileresult SELECT searchengine as se, t_file.*, data.subdomain FROM res_data data JOIN res_tags_file t_file ON t_file.url = data.res_url'
 
 def database_connect():
     conn = pymysql.connect(host='192.168.6.90',
@@ -32,32 +32,31 @@ def def_temp_table(cur, id, status, git=False):
     else: find_in_set = '<'
 
     if id["comp"][0] == 0:
-        temp_table_query =  CREATE_DEF_TABLE + f' WHERE FIND_IN_SET("git", tags) {find_in_set} 1' + filter_public
+        temp_table_query =  CREATE_DEF_TABLE + f' WHERE FIND_IN_SET("git", tags) {find_in_set} 1 AND FIND_IN_SET("file", tags) = 0' + filter_public
 
     elif id["root"][0] == 0:
         temp_table_query =  CREATE_DEF_TABLE + f'''
-        JOIN res_data_label lab ON lab.label = con.res_url
-        JOIN res_closure clo ON lab.id = clo.descendant
+        JOIN list_subdomain sub ON sub.url = data.subdomain
+        JOIN list_rootdomain root ON root.url = sub.rootdomain
+        JOIN list_company comp ON comp.company = root.company
         WHERE FIND_IN_SET("git", tags) {find_in_set} 1
-        AND ((ancestor = {id["comp"][0]} AND depth = 3)
-        OR (ancestor = {id["comp"][0]} AND depth = 2 AND lab.label LIKE "http%"))
+        AND comp.id = {id["comp"][0]}
         ''' + filter_public
 
     elif id["sub"][0] == 0:
         temp_table_query =  CREATE_DEF_TABLE + f'''
-        JOIN res_data_label lab ON lab.label = con.res_url
-        JOIN res_closure clo ON lab.id = clo.descendant
+        JOIN list_subdomain sub ON sub.url = data.subdomain
+        JOIN list_rootdomain root ON root.url = sub.rootdomain
         WHERE FIND_IN_SET("git", tags) {find_in_set} 1
-        AND ((ancestor = {id["root"][0]} AND depth = 2)
-        OR (ancestor = {id["root"][0]} AND depth = 1 AND lab.label LIKE "http%"))
+        AND root.id = {id["root"][0]}
         ''' + filter_public
 
     else:
         temp_table_query =  CREATE_DEF_TABLE + f'''
-        JOIN res_data_label lab ON lab.label = con.res_url
-        JOIN res_closure clo ON lab.id = clo.descendant
+        JOIN list_subdomain sub ON sub.url = data.subdomain
         WHERE FIND_IN_SET("git", tags) {find_in_set} 1
-        AND ancestor = {id["sub"][0]}''' + filter_public
+        AND sub.id = {id["sub"][0]}
+        ''' + filter_public
 
     cur.execute(temp_table_query)
         
@@ -71,25 +70,23 @@ def file_temp_table(cur, id, status):
 
     elif id["root"][0] == 0:
         temp_table_query =  CREATE_FILE_TABLE + f'''
-        JOIN res_data_label lab ON lab.label = con.res_url
-        JOIN res_closure clo ON lab.id = clo.descendant
-        WHERE ((ancestor = {id["comp"][0]} AND depth = 3)
-        OR (ancestor = {id["comp"][0]} AND depth = 2))
+        JOIN list_subdomain sub ON sub.url = data.subdomain
+        JOIN list_rootdomain root ON root.url = sub.rootdomain
+        JOIN list_company comp ON comp.company = root.company
+        AND comp.id = {id["comp"][0]}
         ''' + filter_public
 
     elif id["sub"][0] == 0:
         temp_table_query =  CREATE_FILE_TABLE + f'''
-        JOIN res_data_label lab ON lab.label = con.res_url
-        JOIN res_closure clo ON lab.id = clo.descendant
-        WHERE ((ancestor = {id["root"][0]} AND depth = 2)
-        OR (ancestor = {id["root"][0]} AND depth = 1))
+        JOIN list_subdomain sub ON sub.url = data.subdomain
+        JOIN list_rootdomain root ON root.url = sub.rootdomain
+        AND root.id = {id["root"][0]}
         ''' + filter_public
 
     else:
         temp_table_query =  CREATE_FILE_TABLE + f'''
-        JOIN res_data_label lab ON lab.label = con.res_url
-        JOIN res_closure clo ON lab.id = clo.descendant
-        WHERE ancestor = {id["sub"][0]}''' + filter_public 
+        JOIN list_subdomain sub ON sub.url = data.subdomain
+        AND sub.id = {id["sub"][0]}''' + filter_public 
 
     cur.execute(temp_table_query)
 
@@ -116,18 +113,19 @@ def file_fining(data):
 
         if line[0] == "G": tmp.append("Google")
         elif line[0] == "B": tmp.append("Bing")
-
-        tmp.append(line[1].upper())
         
-        for i in range(2, 4): tmp.append(line[i])
-        if line[5] and line[4]:
-            tmp.append(line[5].strftime("%Y-%m-%d") + ", " + str(line[4]))
-        elif line[4]:
-            tmp.append(line[4])
+        tmp.append(line[1])
+        tmp.append(line[2].upper())
+        
+        for i in range(3, 5): tmp.append(line[i])
+        if line[6] and line[5]:
+            tmp.append(line[6].strftime("%Y-%m-%d") + ", " + str(line[4]))
         elif line[5]:
-            tmp.append(line[5].strftime("%Y-%m-%d"))
+            tmp.append(line[5])
+        elif line[6]:
+            tmp.append(line[6].strftime("%Y-%m-%d"))
         else:
             tmp.append("None")
+            
         result.append(tmp)
-
     return result

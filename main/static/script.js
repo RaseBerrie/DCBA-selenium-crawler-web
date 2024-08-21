@@ -218,12 +218,12 @@ function loadContent() {
     $('#' + pagename.substr(1)).addClass("selected");
 
     var cookie = JSON.parse($.cookie('status'));
-    $('input:checkbox[id="filter"]').prop('checked', cookie.filter);
+    $('input:checkbox[id="switch-check"]').prop('checked', cookie.filter);
 
-    $('input:checkbox[id="filter"]').on('click', function() {
+    $('#public-filter').on('click', function() {
         cookie.filter = !cookie.filter;
         $.cookie("status", JSON.stringify(cookie));        
-        $('input:checkbox[id="filter"]').prop('checked', cookie.filter);
+        $('input:checkbox[id="switch-check"]').prop('checked', cookie.filter);
 
         if (queryed) {
             page = 1;
@@ -234,7 +234,7 @@ function loadContent() {
             loadInitiateResults(true, pagename);
         }
     });
-
+    
     $('#searchForm').on('submit', function(event) {
         event.preventDefault();
         $('#results').empty();
