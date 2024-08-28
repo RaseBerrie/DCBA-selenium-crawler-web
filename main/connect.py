@@ -1,6 +1,7 @@
 from main import *
-from functions.utils import database_query
 from flask import Blueprint, render_template
+
+from functions.models import ReqKeys, ListSub, ListRoot
 
 crawler = Blueprint('crawler', __name__, template_folder='templates/connect', url_prefix="/crawler")
 
@@ -10,14 +11,10 @@ def main():
 
 @crawler.route('/table')
 def reload():
-    query = '''
-            SELECT comp.company, req.key, b_def, g_def, b_git, g_git 
-            FROM req_keys req
-            JOIN list_subdomain sub ON req.key = sub.url
-            JOIN list_rootdomain root ON sub.rootdomain = root.url
-            JOIN list_company comp ON root.company = comp.company
-            ORDER BY b_def, g_def, b_git, g_git;
-            '''
-    datas = database_query(query)
+    query = db.session.query(ReqKeys, ListRoot)
+    query = query.join(ListSub, ListSub.url == ReqKeys.key)\
+        .join(ListRoot, ListRoot.url == ListSub.rootdomain)
+    datas = query.order_by(ReqKeys.b_def).order_by(ReqKeys.g_def)\
+        .order_by(ReqKeys.b_git).order_by(ReqKeys.g_git).all()
 
     return render_template('tab_one.html', datas=datas)

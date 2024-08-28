@@ -2,9 +2,9 @@
     <li><a class="dropdown-item" href="#" value="0">전체</a></li>
     <li><hr class="dropdown-divider"></li>
     
-    {% for category in categories %}
-    <li><a class="dropdown-item" href="#" onclick="firstLevel('{{ category[0] }}');" value="{{ category[0] }}">
-        {{ category[1] }}
+    {% for list_company in categories %}
+    <li><a class="dropdown-item" href="#" onclick="firstLevel('{{ list_company.id }}');" value="{{ list_company.id }}">
+        {{ list_company.company }}
     </a></li>
     {% endfor %}
 </li>

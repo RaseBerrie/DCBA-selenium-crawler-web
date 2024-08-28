@@ -1,14 +1,14 @@
-# 고정변수
 NORESULT = '<tr><td colspan=5>검색 결과가 없습니다.<span id="count-result" style="display: none;">0</span></td></tr>'
-SELECTQUERY = 'SELECT * FROM temp_searchresult'
-COUNTQUERY = 'SELECT count(*) FROM temp_searchresult'
 
 from urllib.parse import unquote
 from json import loads
+from sqlalchemy import and_, func
 from io import BytesIO
 
 from main import *
-from functions.utils import database_query, database_connect, def_temp_table, file_temp_table, data_fining, file_fining
+from functions.utils import def_temp_table, file_temp_table, data_fining, file_fining
+from functions.models import ResData, ListComp, ListSub, ListRoot, TagExp, TagFile, ReqKeys
+
 import pandas as pd
 
 from flask import Blueprint, Response, request, render_template, jsonify
@@ -34,65 +34,33 @@ def main(sidemenu):
     per_page = 15
     offset = (page - 1) * per_page
 
-    conn = database_connect()
-    cur = conn.cursor()
-
-    query_dat = ""
-    query_count = ""
-
     if sidemenu == "fileparse":
-        file_temp_table(cur, id, status)
-        if tag:
-            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
-            query_count += f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
-        else:
-            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult"
-            query_count += f"SELECT count(*) FROM temp_fileresult"
-
-    elif sidemenu == "expose":
-        def_temp_table(cur, id, status)
-        if tag:
-            query_dat += SELECTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s'" % (tag)
-            query_count += COUNTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s'" % (tag)
-        else:
-            query_dat += SELECTQUERY + f" WHERE tags = 'expose'"
-            query_count += COUNTQUERY + f" WHERE tags = 'expose'"
+        query = file_temp_table(id)
+        if tag: query = query.filter(TagFile.filetype == tag)
 
     elif sidemenu == "gitsearch":
-        def_temp_table(cur, id, status, git=True)
-        query_dat += SELECTQUERY
-        query_count += COUNTQUERY
+        query = def_temp_table(id, status, git=True)
 
     else:
-        def_temp_table(cur, id, status)
-        if sidemenu == "content":
-            query_dat = SELECTQUERY
-            query_count = COUNTQUERY
-        
-        elif sidemenu == "loginpage":
-            query_dat += SELECTQUERY + f" WHERE tags = 'login'"
-            query_count += COUNTQUERY + f" WHERE tags = 'login'"
-        
+        query = def_temp_table(id, status)
+        if sidemenu == "loginpage":
+            query = query.filter(ResData.tags == 'login')
+
         elif sidemenu == "adminpage":
-            query_dat += SELECTQUERY + f" WHERE tags = 'admin'"
-            query_count += COUNTQUERY + f" WHERE tags = 'admin'"
+            query = query.filter(ResData.tags == 'admin')
 
-    if not filedownload:
-        query_dat = query_dat + " LIMIT %s OFFSET %s" % (per_page, offset)
+        elif sidemenu == "expose":
+            if tag:
+                query = query.join(TagExp, ResData.id == TagExp.id)
+                query = query.filter(TagExp.restype == tag)
+            else:
+                query = query.filter(ResData.tags == 'expose')
 
-    cur.execute(query_dat)
-    data = cur.fetchall()
-    
-    cur.execute(query_count)
-    count = cur.fetchone()
-
-    if len(data) == 0:
-            return NORESULT
-
-    cur.close()
-    conn.close()
+    count = query.count()
+    if count == 0: return NORESULT
 
     if filedownload:
+        data = query.all()
         if sidemenu == "fileparse":
             head = ["SearchEngine", "Subdomain", "FileType", "Title", "URL", "Contents"]
             result = file_fining(data)
@@ -115,11 +83,13 @@ def main(sidemenu):
         response.headers["Content-Disposition"] = "attachment; filename=database_export.csv"
         output_stream.close()
         return response
+    else:
+        data = query.limit(per_page).offset(offset).all()
 
     if sidemenu == "fileparse":
-        return render_template('file_results.html', datas=file_fining(data), count=count[0], enumerate=enumerate, page=page)
+        return render_template('file_results.html', datas=file_fining(data), count=count, enumerate=enumerate, page=page)
     else:
-        return render_template('default_results.html', datas=data_fining(data), count=count[0], enumerate=enumerate, page=page)
+        return render_template('default_results.html', datas=data_fining(data), count=count, enumerate=enumerate, page=page)
 
 @search.route('/<sidemenu>/result', methods=['GET'])
 def result(sidemenu):
@@ -144,80 +114,37 @@ def result(sidemenu):
     per_page = 15
     offset = (page - 1) * per_page
 
-    conn = database_connect()
-    cur = conn.cursor()
-
-    data = []
-    count = [0, ]
-
-    query_dat = ""
-    query_count = ""
-
     if sidemenu == "fileparse":
-        file_temp_table(cur, id, status)
-        if menu and key and tag:
-            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
-            query_count += f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s AND filetype = '%s'" % (f'"%{key}%"', tag)
-
-        elif menu and key:
-            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
-            query_count += f"SELECT count(*) FROM temp_fileresult WHERE {menu} LIKE %s" % (f'"%{key}%"')
-            
-        elif tag:
-            query_dat += f"SELECT se, subdomain, filetype, title, url, data, moddate FROM temp_fileresult WHERE filetype = '%s'" % (tag)
-            query_count += f"SELECT count(*) FROM temp_fileresult WHERE filetype = '%s'" % (tag)
-
-    elif sidemenu == "expose":
-        def_temp_table(cur, id, status)
-        if menu and key and tag:
-            #sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s'"
-            query_dat += SELECTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s' AND sr.{menu} LIKE %s AND tags = 'expose'" % (tag, f'"%{key}%"')
-            query_count += COUNTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s' AND sr.{menu} LIKE %s AND tags = 'expose'" % (tag, f'"%{key}%"')
-
-        elif menu and key:
-            query_dat += SELECTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE sr.{menu} LIKE %s" % (f'"%{key}%"')
-            query_count += COUNTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE sr.{menu} LIKE %s" % (f'"%{key}%"')
-
-        elif tag:
-            query_dat += SELECTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s'" % (tag)
-            query_count += COUNTQUERY + f" sr JOIN res_tags_expose t_expose ON t_expose.url = sr.res_url WHERE t_expose.restype = '%s'" % (tag)
-
-    elif sidemenu == "gitsearch":
-        def_temp_table(cur, id, status, git=True)
-        query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
-        query_count += COUNTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
+        query = file_temp_table(id)
+        if menu and key:
+            query = query.filter(getattr(TagFile, menu).like(f'%{key}%'))
+        if tag:
+            query = query.filter(TagFile.filetype == tag)
 
     else:
-        if menu and key:
-            def_temp_table(cur, id, status)
-            if sidemenu == "content":
-                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
-                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s" % (f'"%{key}%"')
+        if sidemenu == "gitsearch":
+            query = def_temp_table(id, status, git=True)
+        else:
+            query = def_temp_table(id, status)
 
-            elif sidemenu == "loginpage":
-                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'login'" % (f'"%{key}%"')
-                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'login'" % (f'"%{key}%"')
+        if menu and key:
+            if sidemenu == "loginpage":
+                query = query.filter(ResData.tags == 'login')
             
             elif sidemenu == "adminpage":
-                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'admin'" % (f'"%{key}%"')
-                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'admin'" % (f'"%{key}%"')
-
+                query = query.filter(ResData.tags == 'admin')
+                
             elif sidemenu == "expose":
-                query_dat += SELECTQUERY + f" WHERE {menu} LIKE %s AND tags = 'expose'" % (f'"%{key}%"')
-                query_count += COUNTQUERY + f" WHERE {menu} LIKE %s AND tags = 'expose'" % (f'"%{key}%"')
+                if tag:
+                    query = query.join(TagExp, ResData.id == TagExp.id)
+                    query = query.filter(TagExp.restype == tag)
+                else:
+                    query = query.filter(ResData.tags == 'expose')
 
-    query_dat = query_dat + " LIMIT %s OFFSET %s" % (per_page, offset)
-    cur.execute(query_dat)
-    data = cur.fetchall()
-        
-    cur.execute(query_count)
-    count = cur.fetchone()
-    
-    if len(data) == 0:
-        return NORESULT
+            query = query.filter(getattr(ResData, menu).like(f'%{key}%'))
 
-    cur.close()
-    conn.close()
+    count = query.count()
+    if count == 0: return NORESULT
 
     if filedownload:
         if sidemenu == "fileparse":
@@ -242,42 +169,63 @@ def result(sidemenu):
         response.headers["Content-Disposition"] = "attachment; filename=database_export.csv"
         output_stream.close()
         return response
+    else:
+        data = query.limit(per_page).offset(offset).all()
 
     if sidemenu == "fileparse":
-        return render_template('file_results.html', datas=file_fining(data), count=count[0], enumerate=enumerate, page=page)
+        return render_template('file_results.html', datas=file_fining(data), count=count, enumerate=enumerate, page=page)
     else:
-        return render_template('default_results.html', datas=data_fining(data), count=count[0], enumerate=enumerate, page=page)
+        return render_template('default_results.html', datas=data_fining(data), count=count, enumerate=enumerate, page=page)
 
 @search.route('/dashboard/default', methods=['GET'])
 def dashboard():
-    query = 'SELECT * FROM list_company'
-    ids = database_query(query)
-    count = len(ids)
-
     data = []
-    query = '''
-    SELECT 	COUNT(*),
-    COUNT(CASE WHEN b_def LIKE 'finished' AND b_git LIKE 'finished' THEN 1 END),
-    COUNT(CASE WHEN g_def LIKE 'finished' AND g_git LIKE 'finished' THEN 1 END)
-    FROM 	req_keys'''    
-    data += database_query(query)
+
+    key_list = []
+    query = db.session.query(ReqKeys)
+
+    key_list.append(query.count())
+    key_list.append(query.filter(and_(ReqKeys.b_def == 'finished', ReqKeys.b_git == 'finished')).count())
+    key_list.append(query.filter(and_(ReqKeys.g_def == 'finished', ReqKeys.g_git == 'finished')).count())
+
+    data.append(key_list)
     
-    for i in range(count):
-        query = f'''
-        SELECT '{ids[i][1]}',
-        COUNT(*) AS totalcount,
-        COUNT(CASE WHEN tags NOT LIKE '' AND tags NOT LIKE 'public' THEN 1 END) AS pub,
-        COUNT(CASE WHEN FIND_IN_SET('login', tags) THEN 1 END) AS login,
-        COUNT(CASE WHEN FIND_IN_SET('admin', tags) THEN 1 END) AS admin,
-        COUNT(CASE WHEN FIND_IN_SET('file', tags) THEN 1 END) AS file,
-        COUNT(CASE WHEN FIND_IN_SET('expose', tags) THEN 1 END) AS expose,
-        COUNT(CASE WHEN FIND_IN_SET('git', tags) THEN 1 END) AS git
-        FROM res_data data
-        JOIN list_subdomain sub ON sub.url = data.subdomain
-        JOIN list_rootdomain root ON root.url = sub.rootdomain
-        JOIN list_company comp ON root.company = comp.company
-        WHERE comp.id = {ids[i][0]}
-        '''
-        data += database_query(query)
+    comp_list = db.session.query(ListComp).all()
+    results = db.session.query(
+        ListComp.company,
+        ResData.tags,
+        func.count(ResData.id).label('tag_count')
+    ).join(ListSub, ListSub.url == ResData.subdomain)\
+        .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
+            .join(ListComp, ListComp.company == ListRoot.company)\
+                .filter(ListComp.id.in_([comp.id for comp in comp_list]))\
+                    .group_by(ListComp.company, ResData.tags).all()
+
+    comp_data = {}
+    for company, tag, count in results:
+        if company not in comp_data:
+            comp_data[company] = {'total': 0, 'non_public': 0, 'login': 0, 'admin': 0, 'file': 0, 'expose': 0, 'git': 0}
+        
+        comp_data[company]['total'] += count
+        
+        if tag not in ['public', '']:
+            comp_data[company]['non_public'] += count
+        
+        if tag in comp_data[company]:
+            comp_data[company][tag] = count
+
+    for comp in comp_list:
+        company = comp.company
+        tmp = [
+            company,
+            comp_data[company]['total'],
+            comp_data[company]['non_public'],
+            comp_data[company]['login'],
+            comp_data[company]['admin'],
+            comp_data[company]['file'],
+            comp_data[company]['expose'],
+            comp_data[company]['git']
+        ]
+        data.append(tmp)
 
     return jsonify(data)

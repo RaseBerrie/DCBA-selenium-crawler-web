@@ -23,17 +23,17 @@
             </tr>
 
             {% for data in datas %}
-                {% if "notstarted" in data %}
+                {% if data.ReqKeys.b_def == "notstarted" or data.ReqKeys.g_def == "notstarted" or data.ReqKeys.b_git == "notstarted" or data.ReqKeys.g_git == "notstarted" %}
                 <tr class="table table-warning" style="border-color: inherit;">
                 {% else %}
                 <tr>
                 {% endif %}
-                    <td>{{ data[0] }}</td>
-                    <td>{{ data[1] }}</td>
-                    <td>{{ data[2] }}</td>
-                    <td>{{ data[3] }}</td>
-                    <td>{{ data[4] }}</td>
-                    <td>{{ data[5] }}</td>
+                    <td>{{ data.ListRoot.company }}</td>
+                    <td>{{ data.ReqKeys.key }}</td>
+                    <td>{{ data.ReqKeys.b_def }}</td>
+                    <td>{{ data.ReqKeys.g_def }}</td>
+                    <td>{{ data.ReqKeys.b_git }}</td>
+                    <td>{{ data.ReqKeys.g_git }}</td>
                 </tr>
             {% endfor %}
         </table>

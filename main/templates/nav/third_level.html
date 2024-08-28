@@ -4,5 +4,5 @@
   {% endif %}
 
   {% for category in categories %}
-  <li><a class="dropdown-item" href="#" value="{{ category[0] }}">{{ category[1] }}</a></li>
+  <li><a class="dropdown-item" href="#" value="{{ category.id }}">{{ category.url }}</a></li>
   {% endfor %}

@@ -3,8 +3,8 @@
   <li><hr class="dropdown-divider"></li>
   {% endif %}
 
-  {% for category in categories %}
-  <li><a class="dropdown-item" href="#" onclick="secondLevel('{{ category[0] }}');" value="{{ category[0] }}">
-    {{ category[1] }}
+  {% for list_rootdomain in categories %}
+  <li><a class="dropdown-item" href="#" onclick="secondLevel('{{ list_rootdomain.id }}');" value="{{ list_rootdomain.id }}">
+    {{ list_rootdomain.url }}
   </a></li>
   {% endfor %}

@@ -1,131 +1,89 @@
-import pymysql
+from main import db
 
-# filter_public 태그가 달렸으면 필터링 당하는 대상
-FILTER_STATUS = ' AND FIND_IN_SET("public", tags) < 1'
-CREATE_DEF_TABLE = 'CREATE TEMPORARY TABLE temp_searchresult SELECT data.* FROM res_data data'
-CREATE_FILE_TABLE = 'CREATE TEMPORARY TABLE temp_fileresult SELECT searchengine as se, t_file.*, data.subdomain FROM res_data data JOIN res_tags_file t_file ON t_file.url = data.res_url'
+from sqlalchemy import and_
+from functions.models import ResData, ListComp, ListRoot, ListSub, TagFile
 
-def database_connect():
-    conn = pymysql.connect(host='192.168.6.90',
-                           user='root',
-                           password='root',
-                           db='searchdb',
-                           charset='utf8mb4')
-    return conn
-
-def database_query(query, args=(), one=False):
-    conn = database_connect()
-    cur = conn.cursor()
-    cur.execute(query, args)
-
-    r = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    return (r[0] if r else None) if one else r
-
-def def_temp_table(cur, id, status, git=False):
-    filter_public = ''
-    if status: filter_public = FILTER_STATUS
-
-    if git: find_in_set = '>'
-    else: find_in_set = '<'
-
-    if id["comp"][0] == 0:
-        temp_table_query =  CREATE_DEF_TABLE + f' WHERE FIND_IN_SET("git", tags) {find_in_set} 1 AND FIND_IN_SET("file", tags) = 0' + filter_public
+def def_temp_table(id, public, git=False):
+    query = db.session.query(ResData)
+    
+    if id["comp"][0] == 0: pass
 
     elif id["root"][0] == 0:
-        temp_table_query =  CREATE_DEF_TABLE + f'''
-        JOIN list_subdomain sub ON sub.url = data.subdomain
-        JOIN list_rootdomain root ON root.url = sub.rootdomain
-        JOIN list_company comp ON comp.company = root.company
-        WHERE FIND_IN_SET("git", tags) {find_in_set} 1
-        AND comp.id = {id["comp"][0]}
-        ''' + filter_public
+        query = query.join(ListSub, ListSub.url == ResData.subdomain)\
+            .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
+                .join(ListComp, ListComp.company == ListRoot.company)\
+                    .filter(ListComp.id == id["comp"][0])
 
     elif id["sub"][0] == 0:
-        temp_table_query =  CREATE_DEF_TABLE + f'''
-        JOIN list_subdomain sub ON sub.url = data.subdomain
-        JOIN list_rootdomain root ON root.url = sub.rootdomain
-        WHERE FIND_IN_SET("git", tags) {find_in_set} 1
-        AND root.id = {id["root"][0]}
-        ''' + filter_public
+        query = query.join(ListSub, ListSub.url == ResData.subdomain)\
+            .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
+                .filter(ListRoot.id == id["root"][0])
 
     else:
-        temp_table_query =  CREATE_DEF_TABLE + f'''
-        JOIN list_subdomain sub ON sub.url = data.subdomain
-        WHERE FIND_IN_SET("git", tags) {find_in_set} 1
-        AND sub.id = {id["sub"][0]}
-        ''' + filter_public
+        query = query.join(ListSub, ListSub.url == ResData.subdomain)\
+            .filter(ListSub.id == id["sub"][0])
 
-    cur.execute(temp_table_query)
+    if git:
+        result = query.filter(ResData.tags == 'git')
+    else:
+        if public:
+            result = query.filter(and_(ResData.tags != 'public', ResData.tags != 'git'))
+        else:
+            result = query.filter(ResData.tags != 'git')
+
+    return result
         
-def file_temp_table(cur, id, status):
-    filter_public = ""
-    if status: filter_public = FILTER_STATUS
+def file_temp_table(id):
+    query = db.session.query(ResData, TagFile).join(TagFile, TagFile.id == ResData.id)
 
-    if id["comp"][0] == 0:
-        temp_table_query =  CREATE_FILE_TABLE + '''
-        WHERE 1=1''' + filter_public
-
+    if id["comp"][0] == 0: pass
+    
     elif id["root"][0] == 0:
-        temp_table_query =  CREATE_FILE_TABLE + f'''
-        JOIN list_subdomain sub ON sub.url = data.subdomain
-        JOIN list_rootdomain root ON root.url = sub.rootdomain
-        JOIN list_company comp ON comp.company = root.company
-        AND comp.id = {id["comp"][0]}
-        ''' + filter_public
+        query = query.join(ListSub, ListSub.url == ResData.subdomain)\
+            .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
+                .join(ListComp, ListComp.company == ListRoot.company)\
+                    .filter(ListComp.id == id["comp"][0])
 
     elif id["sub"][0] == 0:
-        temp_table_query =  CREATE_FILE_TABLE + f'''
-        JOIN list_subdomain sub ON sub.url = data.subdomain
-        JOIN list_rootdomain root ON root.url = sub.rootdomain
-        AND root.id = {id["root"][0]}
-        ''' + filter_public
+        query = query.join(ListSub, ListSub.url == ResData.subdomain)\
+            .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
+                .filter(ListRoot.id == id["root"][0])
 
     else:
-        temp_table_query =  CREATE_FILE_TABLE + f'''
-        JOIN list_subdomain sub ON sub.url = data.subdomain
-        AND sub.id = {id["sub"][0]}''' + filter_public 
+        query = query.join(ListSub, ListSub.url == ResData.subdomain)\
+            .filter(ListSub.id == id["sub"][0])
 
-    cur.execute(temp_table_query)
-
-def data_fining(data):
+    return query
+    
+def data_fining(datas):
     result = []
-    for line in data:
+    for res_data in datas:
         tmp = []
-        if line[1] == "G": tmp.append("Google")
-        elif line[1] == "B": tmp.append("Bing")
 
-        if ":" in line[2]:
-            str = line[2].split(':')[0]
-            tmp.append(str)
-        else: tmp.append(line[2])
+        if res_data.searchengine == "G": tmp.append("Google")
+        elif res_data.searchengine == "B": tmp.append("Bing")
 
-        for i in range(4, 7): tmp.append(line[i])
+        tmp.append(res_data.subdomain)
+        tmp.append(res_data.res_title)
+        tmp.append(res_data.res_url)
+        tmp.append(res_data.res_content)
         result.append(tmp)
+
     return result
 
-def file_fining(data):
+def file_fining(datas):
     result = []
-    for line in data:
+    for line in datas:
         tmp = []
 
-        if line[0] == "G": tmp.append("Google")
-        elif line[0] == "B": tmp.append("Bing")
+        if line.ResData.searchengine == "G": tmp.append("Google")
+        elif line.ResData.searchengine == "B": tmp.append("Bing")
         
-        tmp.append(line[1])
-        tmp.append(line[2].upper())
-        
-        for i in range(3, 5): tmp.append(line[i])
-        if line[6] and line[5]:
-            tmp.append(line[6].strftime("%Y-%m-%d") + ", " + str(line[4]))
-        elif line[5]:
-            tmp.append(line[5])
-        elif line[6]:
-            tmp.append(line[6].strftime("%Y-%m-%d"))
-        else:
-            tmp.append("None")
-            
+        tmp.append(line.ResData.subdomain)
+        tmp.append(line.TagFile.filetype.upper())
+        tmp.append(line.TagFile.title)
+        tmp.append(line.TagFile.url)
+        tmp.append("None")
+
         result.append(tmp)
     return result
