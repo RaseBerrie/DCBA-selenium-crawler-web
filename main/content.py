@@ -2,12 +2,12 @@ NORESULT = '<tr><td colspan=5>검색 결과가 없습니다.<span id="count-resu
 
 from urllib.parse import unquote
 from json import loads
-from sqlalchemy import and_, func
+from sqlalchemy import and_, or_, func
 from io import BytesIO
 
 from main import *
 from functions.utils import def_temp_table, file_temp_table, data_fining, file_fining
-from functions.models import ResData, ListComp, ListSub, ListRoot, TagExp, TagFile, ReqKeys
+from functions.models import ResDefData, ResGitData, ListComp, ListSub, ListRoot, TagExp, TagFile, ReqKeys
 
 import pandas as pd
 
@@ -43,18 +43,21 @@ def main(sidemenu):
 
     else:
         query = def_temp_table(id, status)
-        if sidemenu == "loginpage":
-            query = query.filter(ResData.tags == 'login')
+        if sidemenu == "content":
+            query = query.filter(or_(ResDefData.tags == '', ResDefData.tags == 'public'))
+
+        elif sidemenu == "loginpage":
+            query = query.filter(ResDefData.tags == 'login')
 
         elif sidemenu == "adminpage":
-            query = query.filter(ResData.tags == 'admin')
+            query = query.filter(ResDefData.tags == 'admin')
 
         elif sidemenu == "expose":
             if tag:
-                query = query.join(TagExp, ResData.id == TagExp.id)
+                query = query.join(TagExp, ResDefData.id == TagExp.id)
                 query = query.filter(TagExp.restype == tag)
             else:
-                query = query.filter(ResData.tags == 'expose')
+                query = query.filter(ResDefData.tags == 'expose')
 
     count = query.count()
     if count == 0: return NORESULT
@@ -124,24 +127,28 @@ def result(sidemenu):
     else:
         if sidemenu == "gitsearch":
             query = def_temp_table(id, status, git=True)
+            query = query.filter(getattr(ResGitData, menu).like(f'%{key}%'))
+
         else:
             query = def_temp_table(id, status)
+            if menu and key:
+                if sidemenu == "content":
+                    query = query.filter(ResDefData.tags == 'public')
 
-        if menu and key:
-            if sidemenu == "loginpage":
-                query = query.filter(ResData.tags == 'login')
-            
-            elif sidemenu == "adminpage":
-                query = query.filter(ResData.tags == 'admin')
+                elif sidemenu == "loginpage":
+                    query = query.filter(ResDefData.tags == 'login')
                 
-            elif sidemenu == "expose":
-                if tag:
-                    query = query.join(TagExp, ResData.id == TagExp.id)
-                    query = query.filter(TagExp.restype == tag)
-                else:
-                    query = query.filter(ResData.tags == 'expose')
+                elif sidemenu == "adminpage":
+                    query = query.filter(ResDefData.tags == 'admin')
+                    
+                elif sidemenu == "expose":
+                    if tag:
+                        query = query.join(TagExp, ResDefData.id == TagExp.id)
+                        query = query.filter(TagExp.restype == tag)
+                    else:
+                        query = query.filter(ResDefData.tags == 'expose')
 
-            query = query.filter(getattr(ResData, menu).like(f'%{key}%'))
+                query = query.filter(getattr(ResDefData, menu).like(f'%{key}%'))
 
     count = query.count()
     if count == 0: return NORESULT
@@ -193,13 +200,13 @@ def dashboard():
     comp_list = db.session.query(ListComp).all()
     results = db.session.query(
         ListComp.company,
-        ResData.tags,
-        func.count(ResData.id).label('tag_count')
-    ).join(ListSub, ListSub.url == ResData.subdomain)\
+        ResDefData.tags,
+        func.count(ResDefData.id).label('tag_count')
+    ).join(ListSub, ListSub.url == ResDefData.subdomain)\
         .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
             .join(ListComp, ListComp.company == ListRoot.company)\
                 .filter(ListComp.id.in_([comp.id for comp in comp_list]))\
-                    .group_by(ListComp.company, ResData.tags).all()
+                    .group_by(ListComp.company, ResDefData.tags).all()
 
     comp_data = {}
     for company, tag, count in results:

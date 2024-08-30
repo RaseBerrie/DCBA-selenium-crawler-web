@@ -33,13 +33,13 @@ class ListSub(db.Model):
         return f'''
         <ListComp id={self.id} rootdomain={self.rootdomain} url={self.url}, is_root={self.is_root}>'''
 
-class ResData(db.Model):
-    __tablename__ = 'res_data'
+class ResDefData(db.Model):
+    __tablename__ = 'res_data_def'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     searchengine = db.Column(db.String(1), nullable=False)
     subdomain = db.Column(db.String(50), nullable=False)
-    tags = db.Column(db.String(100), nullable=False, default="")  # SET in MySQL can be handled as String with a check
+    tags = db.Column(db.String(100), nullable=False, default="") 
     res_title = db.Column(db.String(100), nullable=False)
     res_url = db.Column(db.Text, nullable=False)
     res_content = db.Column(db.Text)
@@ -47,8 +47,25 @@ class ResData(db.Model):
 
     def __repr__(self):
         return f'''
-        <ResData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain} tags={self.tags}
+        <ResDefData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain} tags={self.tags}
         res_title={self.res_title} res_url={self.res_url} res_content={self.res_content} update_time={self.update_time}>'''
+    
+class ResGitData(db.Model):
+    __tablename__ = 'res_data_git'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    searchengine = db.Column(db.String(1), nullable=False)
+    subdomain = db.Column(db.String(50), nullable=False)
+    res_title = db.Column(db.String(100), nullable=False)
+    res_url = db.Column(db.Text, nullable=False)
+    res_content = db.Column(db.Text)
+    update_time = db.Column(db.TIMESTAMP, nullable=False, server_default=db.func.current_timestamp())
+
+    def __repr__(self):
+        return f'''
+        <ResGitData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain}
+        res_title={self.res_title} res_url={self.res_url} res_content={self.res_content} update_time={self.update_time}>'''
+
     
 class ReqKeys(db.Model):
     __tablename__ = 'req_keys'
