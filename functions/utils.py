@@ -1,85 +1,76 @@
 from main import db
+from functions.models import ResDefData, ResGitData, ListComp, ListRoot, ListSub, TagFile, TagExp
 
-from sqlalchemy import and_
-from functions.models import ResDefData, ResGitData, ListComp, ListRoot, ListSub, TagFile
+def query_joiner(id, query, git):
+    if git: Data = ResGitData
+    else: Data = ResDefData
 
-def def_temp_table(id, public, git=False):
-    if git:
-        query = db.session.query(ResGitData)
-        
-        if id["comp"][0] == 0: result = query
+    if id["comp"][0] == 0:
+        result = query
 
-        elif id["root"][0] == 0:
-            result = query.join(ListSub, ListSub.url == ResGitData.subdomain)\
-                .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
-                    .join(ListComp, ListComp.company == ListRoot.company)\
-                        .filter(ListComp.id == id["comp"][0])
-        elif id["sub"][0] == 0:
-            result = query.join(ListSub, ListSub.url == ResGitData.subdomain)\
-                .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
-                    .filter(ListRoot.id == id["root"][0])
-        else:
-            result = query.join(ListSub, ListSub.url == ResGitData.subdomain)\
-                .filter(ListSub.id == id["sub"][0])
-    else:
-        query = db.session.query(ResDefData)
-        
-        if id["comp"][0] == 0: pass
-
-        elif id["root"][0] == 0:
-            query = query.join(ListSub, ListSub.url == ResDefData.subdomain)\
-                .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
-                    .join(ListComp, ListComp.company == ListRoot.company)\
-                        .filter(ListComp.id == id["comp"][0])
-        elif id["sub"][0] == 0:
-            query = query.join(ListSub, ListSub.url == ResDefData.subdomain)\
-                .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
-                    .filter(ListRoot.id == id["root"][0])
-        else:
-            query = query.join(ListSub, ListSub.url == ResDefData.subdomain)\
-                .filter(ListSub.id == id["sub"][0])
-
-        if public: result = query.filter(ResDefData.tags != 'public')
-        else: result = query
-
-    return result
-        
-def file_temp_table(id):
-    query = db.session.query(ResDefData, TagFile).join(TagFile, TagFile.id == ResDefData.id)
-
-    if id["comp"][0] == 0: pass
-    
     elif id["root"][0] == 0:
-        query = query.join(ListSub, ListSub.url == ResDefData.subdomain)\
+        result = query.join(ListSub, ListSub.url == Data.subdomain)\
             .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
                 .join(ListComp, ListComp.company == ListRoot.company)\
                     .filter(ListComp.id == id["comp"][0])
-
     elif id["sub"][0] == 0:
-        query = query.join(ListSub, ListSub.url == ResDefData.subdomain)\
+        result = query.join(ListSub, ListSub.url == Data.subdomain)\
             .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
                 .filter(ListRoot.id == id["root"][0])
-
     else:
-        query = query.join(ListSub, ListSub.url == ResDefData.subdomain)\
+        result = query.join(ListSub, ListSub.url == Data.subdomain)\
             .filter(ListSub.id == id["sub"][0])
+        
+    return result
 
-    return query
+def def_query(id, public, git=False):
+    if git:
+        query = db.session.query(ResGitData)
+        result = query_joiner(id, query, git=True)
+    else:
+        query = db.session.query(ResDefData)
+        result = query_joiner(id, query, git=False)
+        
+        if public: result = result.filter(ResDefData.tags != 'public')
+
+    return result
+        
+def file_query(id):
+    query = db.session.query(ResDefData, TagFile)\
+        .join(TagFile, TagFile.id == ResDefData.id)
+    result = query_joiner(id, query, git=False)
+
+    return result
+
+def exp_query(id):
+    query = db.session.query(ResDefData, TagExp)\
+        .join(TagExp, TagExp.id == ResDefData.id)
+    result = query_joiner(id, query, git=False)
+
+    return result
     
 def data_fining(datas):
     result = []
     for res_data in datas:
+        try:
+            line = res_data.ResDefData
+        except:
+            line = res_data
+
         tmp = []
 
-        if res_data.searchengine == "G": tmp.append("Google")
-        elif res_data.searchengine == "B": tmp.append("Bing")
+        if line.searchengine == "G": tmp.append("Google")
+        elif line.searchengine == "B": tmp.append("Bing")
 
-        tmp.append(res_data.subdomain)
-        tmp.append(res_data.res_title)
-        tmp.append(res_data.res_url)
-        tmp.append(res_data.res_content)
+        tmp.append(line.subdomain)
+        tmp.append(line.res_title)
+        tmp.append(line.res_url)
+        try:
+            tmp.append(res_data.TagExp.exp_content)
+        except:
+            tmp.append(line.res_content)
+        
         result.append(tmp)
-
     return result
 
 def file_fining(datas):

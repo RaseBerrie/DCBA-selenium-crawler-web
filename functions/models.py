@@ -85,10 +85,11 @@ class TagExp(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     url = db.Column(db.Text, nullable=False)
-    restype = db.Column(db.Enum('error', 'sample', 'servinfo', 'others', name='restype_enum'))
+    restype = db.Column(db.Enum('error', 'sample', 'servinfo', 'classified', 'others', name='restype_enum'))
+    exp_content = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
-        return f"<TagExp id={self.id} url={self.url} restype={self.restype}>"
+        return f"<TagExp id={self.id} url={self.url} restype={self.restype} exp_content={self.exp_content}>"
     
 class TagFile(db.Model):
     __tablename__ = 'res_tags_file'

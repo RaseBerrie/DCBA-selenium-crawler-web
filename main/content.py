@@ -6,7 +6,7 @@ from sqlalchemy import and_, or_, func
 from io import BytesIO
 
 from main import *
-from functions.utils import def_temp_table, file_temp_table, data_fining, file_fining
+from functions.utils import def_query, file_query, exp_query, data_fining, file_fining
 from functions.models import ResDefData, ResGitData, ListComp, ListSub, ListRoot, TagExp, TagFile, ReqKeys
 
 import pandas as pd
@@ -14,6 +14,7 @@ import pandas as pd
 from flask import Blueprint, Response, request, render_template, jsonify
 search = Blueprint('search', __name__, template_folder='templates/content')
 
+menu_dict = {"content": "public", "loginpage": "login", "adminpage": "admin", "expose": "expose"}
 @search.route('/<sidemenu>/default', methods=['GET'])
 def main(sidemenu):
     # 서브메뉴 접속 후 첫 페이지 로드
@@ -35,29 +36,26 @@ def main(sidemenu):
     offset = (page - 1) * per_page
 
     if sidemenu == "fileparse":
-        query = file_temp_table(id)
+        query = file_query(id)
         if tag: query = query.filter(TagFile.filetype == tag)
 
     elif sidemenu == "gitsearch":
-        query = def_temp_table(id, status, git=True)
+        query = def_query(id, status, git=True)
+
+    elif sidemenu == "expose":
+        query = exp_query(id)
+        if tag:
+            query = query.filter(TagExp.restype == tag)
+        else:
+            query = query.filter(ResDefData.tags == 'expose')
 
     else:
-        query = def_temp_table(id, status)
+        query = def_query(id, status)
         if sidemenu == "content":
             query = query.filter(or_(ResDefData.tags == '', ResDefData.tags == 'public'))
 
-        elif sidemenu == "loginpage":
-            query = query.filter(ResDefData.tags == 'login')
-
-        elif sidemenu == "adminpage":
-            query = query.filter(ResDefData.tags == 'admin')
-
-        elif sidemenu == "expose":
-            if tag:
-                query = query.join(TagExp, ResDefData.id == TagExp.id)
-                query = query.filter(TagExp.restype == tag)
-            else:
-                query = query.filter(ResDefData.tags == 'expose')
+        elif sidemenu in ["loginpage", "adminpage"]:
+            query = query.filter(ResDefData.tags == menu_dict[sidemenu])
 
     count = query.count()
     if count == 0: return NORESULT
@@ -118,7 +116,7 @@ def result(sidemenu):
     offset = (page - 1) * per_page
 
     if sidemenu == "fileparse":
-        query = file_temp_table(id)
+        query = file_query(id)
         if menu and key:
             query = query.filter(getattr(TagFile, menu).like(f'%{key}%'))
         if tag:
@@ -126,22 +124,17 @@ def result(sidemenu):
 
     else:
         if sidemenu == "gitsearch":
-            query = def_temp_table(id, status, git=True)
+            query = def_query(id, status, git=True)
             query = query.filter(getattr(ResGitData, menu).like(f'%{key}%'))
 
         else:
-            query = def_temp_table(id, status)
             if menu and key:
-                if sidemenu == "content":
-                    query = query.filter(ResDefData.tags == 'public')
-
-                elif sidemenu == "loginpage":
-                    query = query.filter(ResDefData.tags == 'login')
-                
-                elif sidemenu == "adminpage":
-                    query = query.filter(ResDefData.tags == 'admin')
+                if sidemenu in ["content", "loginpage", "adminpage"]:
+                    query = def_query(id, status)
+                    query = query.filter(ResDefData.tags == menu_dict[sidemenu])
                     
                 elif sidemenu == "expose":
+                    query = exp_query(id, status)
                     if tag:
                         query = query.join(TagExp, ResDefData.id == TagExp.id)
                         query = query.filter(TagExp.restype == tag)

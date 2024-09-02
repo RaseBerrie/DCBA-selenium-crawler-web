@@ -105,8 +105,9 @@ function downloadButton(pagename) {
                 switch(tag) {
                     case "기타": tag = "others"; break;
                     case "에러 페이지": tag = "error"; break;
-                    case "샘플 페이지": tag = "sample"; break;
+                    case "기본 페이지": tag = "sample"; break;
                     case "서버 정보 노출": tag = "servinfo"; break;
+                    case "중요 정보 노출": tag = "classified"; break;
                 }
             } else tag = ''
 
@@ -558,8 +559,9 @@ function loadInitiateResults(_reset, pagename) {
             switch(tag) {
                 case "기타": tag = 'others'; break;
                 case "에러 페이지": tag = "error"; break;
-                case "샘플 페이지": tag = "sample"; break;
+                case "기본 페이지": tag = "sample"; break;
                 case "서버 정보 노출": tag = "servinfo"; break;
+                case "중요 정보 노출": tag = "classified"; break;
             }
         }
     }
@@ -601,8 +603,9 @@ function loadResults(_reset, pagename) {
             switch(tag) {
                 case "기타": tag = ''; break;
                 case "에러 페이지": tag = "error"; break;
-                case "샘플 페이지": tag = "sample"; break;
+                case "기본 페이지": tag = "sample"; break;
                 case "서버 정보 노출": tag = "servinfo"; break;
+                case "중요 정보 노출": tag = "classified"; break;
                 default: break;
             }
         }
