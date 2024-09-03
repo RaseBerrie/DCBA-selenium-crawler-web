@@ -42,8 +42,7 @@
 $("#start-crawl").on("click", function() {
     $.ajax({
         type: "GET",
-        dataType: "jsonp",
-        jsonp: "callback",
+        dataType: "json",
         url: "http://192.168.6.90:4000/crawler/run",
         data: {
             args: JSON.stringify({

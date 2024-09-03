@@ -1,20 +1,11 @@
-/*************** CONSTANTS ***************/
-const DROPTWO = `<li class="dropdown-item">
-                <a class="link-secondary link-underline-opacity-0" href="#" style="pointer-events: none;">
-                    회사명을 먼저 선택하세요.
-                </a></li>`
-const DROPTHREE = `<li class="dropdown-item">
-                <a class="link-secondary link-underline-opacity-0" href="#" style="pointer-events: none;">
-                    루트 도메인을 먼저 선택하세요.
-                </a></li>`
+const DROPTWO = `<li class="dropdown-item"><a class="link-secondary link-underline-opacity-0" href="#" style="pointer-events: none;">회사명을 먼저 선택하세요.</a></li>`
+const DROPTHREE = `<li class="dropdown-item"><a class="link-secondary link-underline-opacity-0" href="#" style="pointer-events: none;">루트 도메인을 먼저 선택하세요.</a></li>`
 
-/*************** DEFAULT ***************/
-function menuClick() {
-    $('#side-nav-list li').on('click', function() {
-        var activeTab = $(this).attr("id");
-        location.href = '/' + activeTab;
-    }
-)} 
+
+/*  =====================================================
+    ==                  NAV / INDEX                    ==
+    =====================================================   */
+
 
 function resizeWindow() {
 	if ($(window).width() < 991) {
@@ -25,6 +16,13 @@ function resizeWindow() {
 		$('.btn-close').hide()
 	}	
 }
+
+function menuClick() {
+    $('#side-nav-list li').on('click', function() {
+        var activeTab = $(this).attr("id");
+        location.href = '/' + activeTab;
+    }
+)}
 
 function pageClick() {
     $('.pagination .page-item').on('click', function() {
@@ -46,93 +44,82 @@ function pageClick() {
     }
 )} 
 
-function scrollTop() {
-    if ($(window).scrollTop() > 500) {
-        $(".backToTopBtn").addClass("active");
+function pagingButtons() {
+    var count = $('#count-result').text();
+    if (count == 0) count = 1;
+
+    let countResult = $('#count-result').text();
+    let countPages = Math.ceil(countResult / 15);
+
+    HTML = ''
+    if (page != 1) { 
+        HTML = `
+        <li class="page-item">
+        <a class="page-link" href="#" aria-label="Previous">
+            <span style="display: none;">처음</span>
+            <i class="fa-solid fa-angles-left"></i>
+        </a></li>
+        <li class="page-item">
+        <a class="page-link" href="#" aria-label="Previous">
+            <span aria-hidden="true">이전</span>
+        </a></li>`
+    }
+
+    if (countPages > 10) {
+        pageInt = parseInt(page);
+        if (pageInt > 5) {
+            let end = pageInt + 5
+            if (end > countPages) end = countPages + 1;
+
+            let i = end - 10
+            if (i < 0) i = 1
+
+            for (i; i < end; i++) {
+                HTML += '<li class="page-item" id="page-'
+                HTML += i;
+                HTML += '"><a class="page-link" href="#">';
+                HTML += i;
+                HTML += '</a></li>'; }
+        } else {
+            for (let i = 1; i < 10; i++) {
+                HTML += '<li class="page-item" id="page-'
+                HTML += i;
+                HTML += '"><a class="page-link" href="#">';
+                HTML += i;
+                HTML += '</a></li>'; }}
+        
     } else {
-        $(".backToTopBtn").removeClass("active");
-    }}
-    $(function() {
-        scrollTop();
-        $(window).on("scroll", scrollTop);
+        for (let i = 0; i < countPages; i++) {
+            HTML += '<li class="page-item" id="page-'
+            HTML += i + 1;
+            HTML += '"><a class="page-link" href="#">';
+            HTML += i + 1;
+            HTML += '</a></li>'; }
+    }
 
-    $(".backToTopBtn").click(function () {
-        $("html, body").animate({ scrollTop: 0 }, 1);
-        return false;
-    });
-});
-
-function foldableButton() {
-    $('.show-less').each(function() {
-        if ($(this).find('.length').width() > $(this).parent('td').width()) {
-            $(this).find('.text-truncate').show();
-            
-            $(this).siblings('.show-more').hide();
-            $(this).find('.length').hide();
-        } else {
-            $(this).find('.text-truncate').hide();
-
-            $(this).siblings('.show-more').remove();
-            $(this).find('.see-more').remove();
-        }
-    });
-
-    $('.see-more').click(function() {
-        $(this).parent('.show-less').hide();
-        $(this).parent('.show-less').siblings('.show-more').show();
-    });
-
-    $('.see-less').click(function() {
-        $(this).parent('.show-more').hide();
-        $(this).parent('.show-more').siblings('.show-less').show();
-    });
-}
-
-function downloadButton(pagename) {
-    $('#download').on('click', function(event) {
-        event.preventDefault();
-        var isTagActive = false;
-
-        if($(".top-align-box").find(".active").text()) isTagActive = true
-        if (!queryed && !isTagActive) {
-            downloadUrl = pagename + '/default?filedownload=true'
-        } else {
-            const menu = $('#search-param').val();
-            const query = $('#searchInput').val();
-
-            if(isTagActive) {
-                tag = $(".top-align-box").find(".active").text();
-                switch(tag) {
-                    case "기타": tag = "others"; break;
-                    case "에러 페이지": tag = "error"; break;
-                    case "기본 페이지": tag = "sample"; break;
-                    case "서버 정보 노출": tag = "servinfo"; break;
-                    case "중요 정보 노출": tag = "classified"; break;
-                }
-            } else tag = ''
-
-            if(pagename === "/fileparse") {
-                switch(menu) {
-                    case "파일 이름": param = 'title'; break;
-                    case "주요 데이터": param = 'data'; break;
-                    default: param = '';
-                }
-            } else {
-                switch(menu) {
-                    case "서브도메인": param = 'subdomain'; break;
-                    case "제목": param = 'res_title'; break;
-                    case "URL": param = 'res_url'; break;
-                    case "콘텐츠": param = 'res_content'; break;
-                    default: param = '';
-                }
+    if(page < countPages) {
+        HTML += `<li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">다음</span>
+                </a></li>
+                <li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span style="display: none;">마지막</span>
+                    <i class="fa-solid fa-angles-right"></i>
+                </a></li>`
             }
-            downloadUrl = pagename + '/result?tag=' + tag + '&menu=' + param + '&key=' + query + '&filedownload=true'
-        }
-        window.location.href = downloadUrl;
-    });
+
+    $('#page-number').empty()
+    $('#page-number').append(HTML);
+    pageClick();
 }
 
-/*************** MENU CONTROL ***************/
+
+/*  =====================================================
+    ==                SIDE / TOP MENU                  ==
+    =====================================================   */
+
+
 function sideMenu() {
     $('.summary').click(function() {
         var sideOptions = $(this).siblings('.side-options');
@@ -212,11 +199,26 @@ function topMenu() {
     });
 }
 
+
+/*  =====================================================
+    ==                  CONTENT PAGE                   ==
+    =====================================================   */
+
+
 function loadContent() {
     if(pagename.substr(1) == 'expose' || pagename == '/fileparse') $('.btn-group').removeClass('d-none');
     if(pagename == '/content') $('#public-filter').removeClass('d-none');
 
     $('#' + pagename.substr(1)).addClass("selected");
+    
+    $('#searchForm').on('submit', function(event) {
+        event.preventDefault();
+        $('#results').empty();
+
+        page = 1;
+        queryed = true;
+        loadResults(true, pagename);
+    });
 
     var cookie = JSON.parse($.cookie('status'));
     $('input:checkbox[id="switch-check"]').prop('checked', cookie.filter);
@@ -234,15 +236,6 @@ function loadContent() {
             page = 1;
             loadInitiateResults(true, pagename);
         }
-    });
-    
-    $('#searchForm').on('submit', function(event) {
-        event.preventDefault();
-        $('#results').empty();
-
-        page = 1;
-        queryed = true;
-        loadResults(true, pagename);
     });
 
     $('.tags').on('click', function(event) {
@@ -266,82 +259,18 @@ function searchMenu() {
     $('.input-group').find('a').click(function(e) {
         e.preventDefault();
         var concept = $(this).text();
+
         $('#search-concept').text(concept);
         $('#search-param').val(concept);
     });
 }
 
-function pagingButtons() {
-    var count = $('#count-result').text();
-    if (count == 0) count = 1;
 
-    let countResult = $('#count-result').text();
-    let countPages = Math.ceil(countResult / 15);
+/*  =====================================================
+    ==                 SHOW DASHBOARD                  ==
+    =====================================================   */
 
-    HTML = ''
-    if (page != 1) { 
-        HTML = `
-        <li class="page-item">
-        <a class="page-link" href="#" aria-label="Previous">
-            <span style="display: none;">처음</span>
-            <i class="fa-solid fa-angles-left"></i>
-        </a></li>
-        <li class="page-item">
-        <a class="page-link" href="#" aria-label="Previous">
-            <span aria-hidden="true">이전</span>
-        </a></li>`
-    }
 
-    if (countPages > 10) {
-        pageInt = parseInt(page);
-        if (pageInt > 5) {
-            let end = pageInt + 5
-            if (end > countPages) end = countPages + 1;
-
-            let i = end - 10
-            if (i < 0) i = 1
-
-            for (i; i < end; i++) {
-                HTML += '<li class="page-item" id="page-'
-                HTML += i;
-                HTML += '"><a class="page-link" href="#">';
-                HTML += i;
-                HTML += '</a></li>'; }
-        } else {
-            for (let i = 1; i < 10; i++) {
-                HTML += '<li class="page-item" id="page-'
-                HTML += i;
-                HTML += '"><a class="page-link" href="#">';
-                HTML += i;
-                HTML += '</a></li>'; }}
-        
-    } else {
-        for (let i = 0; i < countPages; i++) {
-            HTML += '<li class="page-item" id="page-'
-            HTML += i + 1;
-            HTML += '"><a class="page-link" href="#">';
-            HTML += i + 1;
-            HTML += '</a></li>'; }
-    }
-
-    if(page < countPages) {
-        HTML += `<li class="page-item">
-                <a class="page-link" href="#" aria-label="Next">
-                    <span aria-hidden="true">다음</span>
-                </a></li>
-                <li class="page-item">
-                <a class="page-link" href="#" aria-label="Next">
-                    <span style="display: none;">마지막</span>
-                    <i class="fa-solid fa-angles-right"></i>
-                </a></li>`
-            }
-
-    $('#page-number').empty()
-    $('#page-number').append(HTML);
-    pageClick();
-}
-
-/*************** OUTPUT ***************/
 function loadDashBoard() {
     let compTitle = []
     let dataCount = {
@@ -391,6 +320,12 @@ function loadDashBoard() {
             borderRadius: '4',
         }
 
+
+/*  =====================================================
+    ==                     CHARTS                      ==
+    =====================================================   */
+
+
         new Chart(document.getElementById("distribution-chart"), {
             plugins: [ChartDataLabels],
             type: 'bar',
@@ -420,20 +355,12 @@ function loadDashBoard() {
                 scales: {
                     x: {
                         stacked: true,
-                        ticks: {
-                            callback: function(value, _index, _values) {
-                                return value * 100;
-                            }
-                        },
+                        ticks: { callback: function(value, _index, _values) { return value * 100; } },
                         max: 1
                     },
                     y: { stacked: true }
                 },
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                    }
-                },
+                plugins: { legend: { position: 'bottom'} },
             }
         });
 
@@ -460,9 +387,7 @@ function loadDashBoard() {
                         ticks: {
                             callback: function(value, _index, _values) {
                                 const remain = value / (Math.pow(10, Math.floor(Math.log10(value))));
-                                if (remain === 1) {
-                                    return value;
-                                }
+                                if (remain === 1) { return value; }
                                 return null;
                             }           
                         }
@@ -544,8 +469,39 @@ function loadDashBoard() {
             }
             expose.data.datasets.push(newDataset);
         }); expose.update();
+    });
+}
 
-    }); //END of GET
+
+/*  =====================================================
+    ==                  SHOW RESULTS                   ==
+    =====================================================   */
+
+
+function foldableButton() {
+    $('.show-less').each(function() {
+        if ($(this).find('.length').width() > $(this).parent('td').width()) {
+            $(this).find('.text-truncate').show();
+            
+            $(this).siblings('.show-more').hide();
+            $(this).find('.length').hide();
+        } else {
+            $(this).find('.text-truncate').hide();
+
+            $(this).siblings('.show-more').remove();
+            $(this).find('.see-more').remove();
+        }
+    });
+
+    $('.see-more').click(function() {
+        $(this).parent('.show-less').hide();
+        $(this).parent('.show-less').siblings('.show-more').show();
+    });
+
+    $('.see-less').click(function() {
+        $(this).parent('.show-more').hide();
+        $(this).parent('.show-more').siblings('.show-less').show();
+    });
 }
 
 function loadInitiateResults(_reset, pagename) {
@@ -650,4 +606,54 @@ function loadResults(_reset, pagename) {
             $('#page-' + String(page)).addClass('active');
         });
     }
+}
+
+
+/*  =====================================================
+    ==                  CSV DOWNLOAD                   ==
+    =====================================================   */
+
+
+function downloadButton(pagename) {
+    $('#download').on('click', function(event) {
+        event.preventDefault();
+        var isTagActive = false;
+
+        if($(".top-align-box").find(".active").text()) isTagActive = true
+        if (!queryed && !isTagActive) {
+            downloadUrl = pagename + '/default?filedownload=true'
+        } else {
+            const menu = $('#search-param').val();
+            const query = $('#searchInput').val();
+
+            if(isTagActive) {
+                tag = $(".top-align-box").find(".active").text();
+                switch(tag) {
+                    case "기타": tag = "others"; break;
+                    case "에러 페이지": tag = "error"; break;
+                    case "기본 페이지": tag = "sample"; break;
+                    case "서버 정보 노출": tag = "servinfo"; break;
+                    case "중요 정보 노출": tag = "classified"; break;
+                }
+            } else tag = ''
+
+            if(pagename === "/fileparse") {
+                switch(menu) {
+                    case "파일 이름": param = 'title'; break;
+                    case "주요 데이터": param = 'data'; break;
+                    default: param = '';
+                }
+            } else {
+                switch(menu) {
+                    case "서브도메인": param = 'subdomain'; break;
+                    case "제목": param = 'res_title'; break;
+                    case "URL": param = 'res_url'; break;
+                    case "콘텐츠": param = 'res_content'; break;
+                    default: param = '';
+                }
+            }
+            downloadUrl = pagename + '/result?tag=' + tag + '&menu=' + param + '&key=' + query + '&filedownload=true'
+        }
+        window.location.href = downloadUrl;
+    });
 }

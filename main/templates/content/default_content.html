@@ -53,8 +53,22 @@
 <table class="table table-hover" style="table-layout: fixed; word-break: break-all;">
     <thead class="table table-dark">
         <tr>
-            <th style="width: 4%; text-align: center;">#</th>
-            <th style="width: 20%;">서브도메인</th>
+            <th class="lh-base" style="width: 4%; text-align: center;">#</th>
+            <th class="p-0" style="width: 20%;">
+                <div class="d-flex flex-wrap justify-content-between align-items-end">
+                    <span>서브도메인</span>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
+                        style="--bs-btn-padding-x: .50rem; --bs-btn-padding-y: 0rem;" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                            <li><a class="dropdown-item active" href="#">전체</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">구글</a></li>
+                            <li><a class="dropdown-item" href="#">Bing</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </th>
             <th style="width: 20%;">제목</th>
             <th>URL</th>
             <th style="width: 35%;">콘텐츠</th>

@@ -14,7 +14,7 @@ import pandas as pd
 from flask import Blueprint, Response, request, render_template, jsonify
 search = Blueprint('search', __name__, template_folder='templates/content')
 
-menu_dict = {"content": "public", "loginpage": "login", "adminpage": "admin", "expose": "expose"}
+menu_dict = {"loginpage": "login", "adminpage": "admin", "expose": "expose"}
 @search.route('/<sidemenu>/default', methods=['GET'])
 def main(sidemenu):
     # 서브메뉴 접속 후 첫 페이지 로드
@@ -129,14 +129,17 @@ def result(sidemenu):
 
         else:
             if menu and key:
-                if sidemenu in ["content", "loginpage", "adminpage"]:
+                if sidemenu in ["loginpage", "adminpage"]:
                     query = def_query(id, status)
                     query = query.filter(ResDefData.tags == menu_dict[sidemenu])
+
+                elif sidemenu == "content":
+                    query = def_query(id, status)
+                    query = query.filter(or_(ResDefData.tags == '', ResDefData.tags == 'public'))
                     
                 elif sidemenu == "expose":
-                    query = exp_query(id, status)
+                    query = exp_query(id)
                     if tag:
-                        query = query.join(TagExp, ResDefData.id == TagExp.id)
                         query = query.filter(TagExp.restype == tag)
                     else:
                         query = query.filter(ResDefData.tags == 'expose')

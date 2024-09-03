@@ -38,6 +38,6 @@ def third_level(category_id):
 
     query = db.session.query(ListSub)
     query = query.join(ListRoot, ListRoot.url == ListSub.rootdomain)
-    categories = query.filter(ListRoot.id == category_id).all()
+    categories = query.filter(ListRoot.id == category_id).filter(ListSub.is_root == 0).all()
 
     return render_template('third_level.html', categories=categories)
