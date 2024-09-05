@@ -39,8 +39,8 @@ function pageClick() {
         }
         else page = clickedPage;
 
-        if (queryed) loadResults(true, pagename);
-        else loadInitiateResults(true, pagename);
+        if (queryed) searchResult(true, pagename);
+        else defaultResult(true, pagename);
     }
 )} 
 
@@ -62,8 +62,7 @@ function pagingButtons() {
         <li class="page-item">
         <a class="page-link" href="#" aria-label="Previous">
             <span aria-hidden="true">이전</span>
-        </a></li>`
-    }
+        </a></li>` }
 
     if (countPages > 10) {
         pageInt = parseInt(page);
@@ -106,8 +105,7 @@ function pagingButtons() {
                 <a class="page-link" href="#" aria-label="Next">
                     <span style="display: none;">마지막</span>
                     <i class="fa-solid fa-angles-right"></i>
-                </a></li>`
-            }
+                </a></li>` }
 
     $('#page-number').empty()
     $('#page-number').append(HTML);
@@ -155,11 +153,11 @@ function topMenu() {
 
         if (queryed) {
             page = 1;
-            loadResults(true, pagename);
+            searchResult(true, pagename);
         }
         else {
             page = 1;
-            loadInitiateResults(true, pagename);
+            defaultResult(true, pagename);
         }
     });
 
@@ -178,11 +176,11 @@ function topMenu() {
 
         if (queryed) {
             page = 1;
-            loadResults(true, pagename);
+            searchResult(true, pagename);
         }
         else {
             page = 1;
-            loadInitiateResults(true, pagename);
+            defaultResult(true, pagename);
         }
     });
 
@@ -195,7 +193,7 @@ function topMenu() {
         var cookie = JSON.parse($.cookie("topMenu")); cookie.sub = [Number(id), concept];
         $.cookie("topMenu", JSON.stringify(cookie));
 
-        loadInitiateResults(true, pagename);
+        defaultResult(true, pagename);
     });
 }
 
@@ -205,10 +203,22 @@ function topMenu() {
     =====================================================   */
 
 
+function loadResult(queryed) {
+    if (queryed) {
+        page = 1;
+        searchResult(true, pagename);
+    }
+    else {
+        page = 1;
+        defaultResult(true, pagename);
+    }
+}
+
 function loadContent() {
     if(pagename.substr(1) == 'expose' || pagename == '/fileparse') $('.btn-group').removeClass('d-none');
     if(pagename == '/content') $('#public-filter').removeClass('d-none');
 
+    var cookie = JSON.parse($.cookie('status'));
     $('#' + pagename.substr(1)).addClass("selected");
     
     $('#searchForm').on('submit', function(event) {
@@ -217,25 +227,25 @@ function loadContent() {
 
         page = 1;
         queryed = true;
-        loadResults(true, pagename);
+        searchResult(true, pagename);
     });
 
-    var cookie = JSON.parse($.cookie('status'));
-    $('input:checkbox[id="switch-check"]').prop('checked', cookie.filter);
+    $('#searchengine-filter').find('li').on('click', function() {
+        cookie.searchengine = $(this).find('a').attr('value');
+        $.cookie('status', JSON.stringify(cookie));
 
+        $(this).find('a').addClass('active')
+        $(this).siblings().find('a').removeClass('active');
+        loadResult(queryed)
+    });
+
+    $('input:checkbox[id="switch-check"]').prop('checked', cookie.filter);
     $('#public-filter').on('click', function() {
         cookie.filter = !cookie.filter;
-        $.cookie("status", JSON.stringify(cookie));        
-        $('input:checkbox[id="switch-check"]').prop('checked', cookie.filter);
+        $.cookie('status', JSON.stringify(cookie));        
 
-        if (queryed) {
-            page = 1;
-            loadResults(true, pagename);
-        }
-        else {
-            page = 1;
-            loadInitiateResults(true, pagename);
-        }
+        $('input:checkbox[id="switch-check"]').prop('checked', cookie.filter);
+        loadResult(queryed)
     });
 
     $('.tags').on('click', function(event) {
@@ -243,15 +253,7 @@ function loadContent() {
         $('#results').empty();
 
         $(this).addClass('active').siblings().removeClass('active');
-
-        if (queryed) {
-            page = 1;
-            loadResults(true, pagename);
-        }
-        else {
-            page = 1;
-            loadInitiateResults(true, pagename);
-        }
+        loadResult(queryed)
     });
 }
 
@@ -374,8 +376,7 @@ function loadDashBoard() {
                         data: dataCount.total,
                         borderWidth: 1,
                         datalabels: numberLabelOption
-                    }
-                ]
+                }]
             },
             options: {
                 plugins: {
@@ -388,12 +389,9 @@ function loadDashBoard() {
                             callback: function(value, _index, _values) {
                                 const remain = value / (Math.pow(10, Math.floor(Math.log10(value))));
                                 if (remain === 1) { return value; }
-                                return null;
-                            }           
-                        }
-                    }
-                }
-            }
+                                return null; }           
+                    }}
+                }}
         });
 
         new Chart(document.getElementById("google-progress"), {
@@ -504,7 +502,7 @@ function foldableButton() {
     });
 }
 
-function loadInitiateResults(_reset, pagename) {
+function defaultResult(_reset, pagename) {
     if (loading) return;
     loading = true;
 
@@ -537,7 +535,7 @@ function loadInitiateResults(_reset, pagename) {
     });
 }
 
-function loadResults(_reset, pagename) {
+function searchResult(_reset, pagename) {
     if (loading) return;
     loading = true;
 

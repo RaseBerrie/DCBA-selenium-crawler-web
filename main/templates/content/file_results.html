@@ -11,7 +11,7 @@
     {% elif data[2] == 'DOCX' %}
         <span style = "color: steelblue;">{{ data[2] }}</span>
     {% else %}
-        {% set others = data[3].split('.') %}
+        {% set others = data[4].split('.') %}
         <span style = "color: darkslateblue;">{{ others[-1].upper() }}</span>
     {% endif %}
     </td>

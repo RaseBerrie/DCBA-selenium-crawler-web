@@ -59,12 +59,12 @@
                     <span>서브도메인</span>
                     <div class="dropdown">
                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
-                        style="--bs-btn-padding-x: .50rem; --bs-btn-padding-y: 0rem;" data-bs-toggle="dropdown" aria-expanded="false"></button>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-                            <li><a class="dropdown-item active" href="#">전체</a></li>
+                                style="--bs-btn-padding-x: .50rem; --bs-btn-padding-y: 0rem;" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" id="searchengine-filter">
+                            <li><a class="dropdown-item active" href="#" value="All">전체</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#">구글</a></li>
-                            <li><a class="dropdown-item" href="#">Bing</a></li>
+                            <li><a class="dropdown-item" href="#" value="G">구글</a></li>
+                            <li><a class="dropdown-item" href="#" value="B">Bing</a></li>
                         </ul>
                     </div>
                 </div>
@@ -88,7 +88,7 @@ var pagename = $(location).attr('pathname');
 
 $(document).ready(function() {
     loadContent();
-    loadInitiateResults(true, pagename);
+    defaultResult(true, pagename);
     downloadButton(pagename);
 });
 </script>

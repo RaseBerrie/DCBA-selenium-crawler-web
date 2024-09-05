@@ -29,8 +29,12 @@ def main(sidemenu):
 
     if request.cookies.get('status') != None:
         status = loads(unquote(request.cookies.get('status')))["filter"]
+        searchengine = loads(unquote(request.cookies.get('status')))["searchengine"]
     else:
         status = False
+        
+    if searchengine not in ["All", "G", "B"]:
+        searchengine = "All"
 
     per_page = 15
     offset = (page - 1) * per_page
@@ -40,17 +44,17 @@ def main(sidemenu):
         if tag: query = query.filter(TagFile.filetype == tag)
 
     elif sidemenu == "gitsearch":
-        query = def_query(id, status, git=True)
+        query = def_query(id, status, searchengine=searchengine, git=True)
 
     elif sidemenu == "expose":
-        query = exp_query(id)
+        query = exp_query(id, searchengine)
         if tag:
             query = query.filter(TagExp.restype == tag)
         else:
             query = query.filter(ResDefData.tags == 'expose')
 
     else:
-        query = def_query(id, status)
+        query = def_query(id, status, searchengine=searchengine)
         if sidemenu == "content":
             query = query.filter(or_(ResDefData.tags == '', ResDefData.tags == 'public'))
 
@@ -109,8 +113,10 @@ def result(sidemenu):
 
     if request.cookies.get('status') != None:
         status = loads(unquote(request.cookies.get('status')))["filter"]
+        searchengine = loads(unquote(request.cookies.get('status')))["searchengine"]
     else:
         status = False
+        searchengine = "All"
         
     per_page = 15
     offset = (page - 1) * per_page
@@ -124,21 +130,21 @@ def result(sidemenu):
 
     else:
         if sidemenu == "gitsearch":
-            query = def_query(id, status, git=True)
+            query = def_query(id, status, searchengine=searchengine, git=True)
             query = query.filter(getattr(ResGitData, menu).like(f'%{key}%'))
 
         else:
             if menu and key:
                 if sidemenu in ["loginpage", "adminpage"]:
-                    query = def_query(id, status)
+                    query = def_query(id, status, searchengine=searchengine)
                     query = query.filter(ResDefData.tags == menu_dict[sidemenu])
 
                 elif sidemenu == "content":
-                    query = def_query(id, status)
+                    query = def_query(id, status, searchengine=searchengine)
                     query = query.filter(or_(ResDefData.tags == '', ResDefData.tags == 'public'))
                     
                 elif sidemenu == "expose":
-                    query = exp_query(id)
+                    query = exp_query(id, searchengine)
                     if tag:
                         query = query.filter(TagExp.restype == tag)
                     else:
@@ -216,19 +222,21 @@ def dashboard():
         
         if tag in comp_data[company]:
             comp_data[company][tag] = count
-
+    
     for comp in comp_list:
-        company = comp.company
-        tmp = [
-            company,
-            comp_data[company]['total'],
-            comp_data[company]['non_public'],
-            comp_data[company]['login'],
-            comp_data[company]['admin'],
-            comp_data[company]['file'],
-            comp_data[company]['expose'],
-            comp_data[company]['git']
-        ]
-        data.append(tmp)
+        if comp.company in comp_data.keys():
+            company = comp.company
+            if comp_data[company]['non_public'] > 0:    
+                tmp = [
+                    company,
+                    comp_data[company]['total'],
+                    comp_data[company]['non_public'],
+                    comp_data[company]['login'],
+                    comp_data[company]['admin'],
+                    comp_data[company]['file'],
+                    comp_data[company]['expose'],
+                    comp_data[company]['git']
+                ]
+                data.append(tmp)
 
     return jsonify(data)

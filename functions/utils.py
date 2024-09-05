@@ -1,7 +1,7 @@
 from main import db
 from functions.models import ResDefData, ResGitData, ListComp, ListRoot, ListSub, TagFile, TagExp
 
-def query_joiner(id, query, git):
+def query_joiner(id, query, searchengine, git=False):
     if git: Data = ResGitData
     else: Data = ResDefData
 
@@ -20,16 +20,19 @@ def query_joiner(id, query, git):
     else:
         result = query.join(ListSub, ListSub.url == Data.subdomain)\
             .filter(ListSub.id == id["sub"][0])
-        
+    
+    if searchengine != "All":
+        result = result.filter(Data.searchengine == searchengine)
+
     return result
 
-def def_query(id, public, git=False):
+def def_query(id, public, searchengine, git=False):
     if git:
         query = db.session.query(ResGitData)
-        result = query_joiner(id, query, git=True)
+        result = query_joiner(id, query, searchengine, git=True)
     else:
         query = db.session.query(ResDefData)
-        result = query_joiner(id, query, git=False)
+        result = query_joiner(id, query, searchengine)
         
         if public: result = result.filter(ResDefData.tags != 'public')
 
@@ -38,14 +41,14 @@ def def_query(id, public, git=False):
 def file_query(id):
     query = db.session.query(ResDefData, TagFile)\
         .join(TagFile, TagFile.id == ResDefData.id)
-    result = query_joiner(id, query, git=False)
+    result = query_joiner(id, query, searchengine="All")
 
     return result
 
-def exp_query(id):
+def exp_query(id, searchengine):
     query = db.session.query(ResDefData, TagExp)\
         .join(TagExp, TagExp.id == ResDefData.id)
-    result = query_joiner(id, query, git=False)
+    result = query_joiner(id, query, searchengine)
 
     return result
     
