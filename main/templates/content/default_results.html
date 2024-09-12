@@ -2,28 +2,28 @@
 <tr>
     <td class="bg-light" style="text-align: center; word-break: keep-all;">{{ (page - 1) * 15 + i + 1 }}</td>
     <td class="text-truncate" style="overflow: hidden;">
-        <span class="badge rounded-pill text-bg-secondary" style="pointer-events: none;">{{ data[0] }}</span> {{ data[1] }} 
+        <span class="badge rounded-pill text-bg-secondary" style="pointer-events: none;">{{ data[0] }}</span> {{ data[2] }} 
     </td>
     <td class="text-truncate">
-        {{ data[2] }}
+        {{ data[3] }}
         <span id="count-result" style="display: none;">{{ count }}</span>    
     </td>
     <td class="text-truncate">
-        <a href="{{ data[3] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
-            {{ data[3] }}
+        <a href="{{ data[4] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
+            {{ data[4] }}
         </a>
     </td>
     <td>
         <div class="show-less" style="display: flex;">
-            <div class="text-truncate" style="width: 90%;"> {{ data[4] }} </div>
-            <span class="length" style="white-space: nowrap;"> {{ data[4] }} </span>
+            <div class="text-truncate" style="width: 90%;"> {{ data[5] }} </div>
+            <span class="length" style="white-space: nowrap;"> {{ data[5] }} </span>
             <button class="see-more btn btn-outline-secondary"
                     style="--bs-btn-padding-y: .05rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">
                     더보기
             </button>
         </div>
         <div class="show-more">
-            {{ data[4] }}
+            {{ data[5] }}
             <button class="see-less btn btn-outline-secondary"
                     style="--bs-btn-padding-y: .05rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">
                     접기

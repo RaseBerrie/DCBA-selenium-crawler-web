@@ -65,13 +65,14 @@ def data_fining(datas):
         if line.searchengine == "G": tmp.append("Google")
         elif line.searchengine == "B": tmp.append("Bing")
 
+        try: tmp.append(line.res_url.split("/")[2].split(":")[1])
+        except: tmp.append("default")
+
         tmp.append(line.subdomain)
         tmp.append(line.res_title)
         tmp.append(line.res_url)
-        try:
-            tmp.append(res_data.TagExp.exp_content)
-        except:
-            tmp.append(line.res_content)
+        try: tmp.append(res_data.TagExp.exp_content)
+        except: tmp.append(line.res_content)
         
         result.append(tmp)
     return result
@@ -84,6 +85,9 @@ def file_fining(datas):
         if line.ResDefData.searchengine == "G": tmp.append("Google")
         elif line.ResDefData.searchengine == "B": tmp.append("Bing")
         
+        try: tmp.append(line.TagFile.url.split("/")[2].split(":")[1])
+        except: tmp.append("default")
+
         tmp.append(line.ResDefData.subdomain)
         tmp.append(line.TagFile.filetype.upper())
         tmp.append(line.TagFile.title)

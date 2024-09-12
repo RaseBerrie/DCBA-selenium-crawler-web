@@ -28,14 +28,15 @@ function pageClick() {
     $('.pagination .page-item').on('click', function() {
         var clickedPage = $(this).find('.page-link').text();
         clickedPage = String(clickedPage).replace(/^\s+|\s+$/g, '');
+        countResult = parseInt($('#count-result').text())
 
         if (clickedPage == "이전") page = parseInt(page) - 1;
         else if (clickedPage == "다음") page = parseInt(page) + 1;
         else if (clickedPage == "처음") page = 1;
         else if (clickedPage == "마지막") {
-            if (page % 15 != 0) {
-                page = parseInt( $('#count-result').text() / 15 ) + 1;
-            } else page = parseInt( $('#count-result').text() / 15 );
+            if (countResult % 15 != 0) {
+                page = parseInt(countResult / 15) + 1;
+            } else page = countResult / 15;
         }
         else page = clickedPage;
 

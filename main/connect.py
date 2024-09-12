@@ -18,3 +18,7 @@ def reload():
     datas = query.order_by(desc(ReqKeys.id))
 
     return render_template('tab_one.html', datas=datas)
+
+@crawler.route('/test')
+def testing():
+    return render_template('crawler_inprocess.html')

@@ -11,22 +11,22 @@
     {% elif data[2] == 'DOCX' %}
         <span style = "color: steelblue;">{{ data[2] }}</span>
     {% else %}
-        {% set others = data[4].split('.') %}
+        {% set others = data[5].split('.') %}
         <span style = "color: darkslateblue;">{{ others[-1].upper() }}</span>
     {% endif %}
     </td>
     <td class = "text-truncate">
         <span class="badge rounded-pill text-bg-secondary">{{ data[0] }}</span>
-        {{ data[3] }}
+        {{ data[4] }}
     </td>
     <td class = "text-truncate">
-        <a href="{{ data[4] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
-            {{ data[4] }}
+        <a href="{{ data[5] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
+            {{ data[5] }}
         </a>
         <span id="count-result" style="display: none;">{{ count }}</span>
     </td>
     <td>
-        {{ data[5] }}
+        {{ data[6] }}
     </td>
 </tr>
 {% endfor %}

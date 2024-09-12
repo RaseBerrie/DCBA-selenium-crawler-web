@@ -5,30 +5,24 @@
 
     <div class="col col-8 my-auto"> <div class="row">
         <div class="form-check form-check-inline col">
-            <input class="form-check-input" type="checkbox" id="g_def">
-            <label class="form-check-label" for="g_def">구글</label>
-            <span class="badge rounded-pill text-bg-secondary" style="pointer-events: none;">DEF</span>
-    
-        </div>
-        <div class="form-check form-check-inline col">
-            <input class="form-check-input" type="checkbox" id="g_git">
-            <label class="form-check-label" for="g_git">구글</label>
-            <span class="badge rounded-pill text-bg-primary" style="pointer-events: none;">GIT</span>
-
-    
-        </div>
-        <div class="form-check form-check-inline col">
             <input class="form-check-input" type="checkbox" id="b_def">
             <label class="form-check-label" for="b_def">Bing</label>
             <span class="badge rounded-pill text-bg-secondary" style="pointer-events: none;">DEF</span>
-
-    
+        </div>
+        <div class="form-check form-check-inline col">
+            <input class="form-check-input" type="checkbox" id="g_def">
+            <label class="form-check-label" for="g_def">구글</label>
+            <span class="badge rounded-pill text-bg-secondary" style="pointer-events: none;">DEF</span>
         </div>
         <div class="form-check form-check-inline col">
             <input class="form-check-input" type="checkbox" id="b_git">
             <label class="form-check-label" for="b_git">Bing</label>
             <span class="badge rounded-pill text-bg-primary" style="pointer-events: none;">GIT</span>
-
+        </div>
+        <div class="form-check form-check-inline col">
+            <input class="form-check-input" type="checkbox" id="g_git">
+            <label class="form-check-label" for="g_git">구글</label>
+            <span class="badge rounded-pill text-bg-primary" style="pointer-events: none;">GIT</span>
         </div>
     </div> </div>
     
@@ -46,10 +40,10 @@ $("#start-crawl").on("click", function() {
         url: "http://192.168.6.90:4000/crawler/run",
         data: {
             args: JSON.stringify({
-                "g_def": $('#g_def').is(':checked'),
                 "b_def": $('#b_def').is(':checked'),
-                "g_git": $('#g_git').is(':checked'),
-                "b_git": $('#b_git').is(':checked')
+                "g_def": $('#g_def').is(':checked'),
+                "b_git": $('#b_git').is(':checked'),
+                "g_git": $('#g_git').is(':checked')
             }),
         },
         success: function(data) {

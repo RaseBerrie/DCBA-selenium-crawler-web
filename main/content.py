@@ -67,10 +67,10 @@ def main(sidemenu):
     if filedownload:
         data = query.all()
         if sidemenu == "fileparse":
-            head = ["SearchEngine", "Subdomain", "FileType", "Title", "URL", "Contents"]
+            head = ["SearchEngine", "Port", "Subdomain", "FileType", "Title", "URL", "Contents"]
             result = file_fining(data)
         else:
-            head = ["SearchEngine", "Subdomain", "Title", "URL", "Contents"]
+            head = ["SearchEngine", "Port", "Subdomain", "Title", "URL", "Contents"]
             result = data_fining(data)
 
         output_stream = BytesIO()
@@ -157,10 +157,10 @@ def result(sidemenu):
 
     if filedownload:
         if sidemenu == "fileparse":
-            head = ["SearchEngine", "Subdomain", "FileType", "Title", "URL", "Contents"]
+            head = ["SearchEngine", "Port", "Subdomain", "FileType", "Title", "URL", "Contents"]
             result = file_fining(data)
         else:
-            head = ["SearchEngine", "Subdomain", "Title", "URL", "Contents"]
+            head = ["SearchEngine", "Port", "Subdomain", "Title", "URL", "Contents"]
             result = data_fining(data)
 
         output_stream = BytesIO()

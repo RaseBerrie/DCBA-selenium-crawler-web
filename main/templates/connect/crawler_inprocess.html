@@ -4,9 +4,25 @@
 
 {% block crawler_html %}
 
-<div class="alert alert-primary mb-0" role="alert">
-    <h5 class="alert-heading">크롤러가 실행 중입니다.</h5>
-    <p class="mb-0">실행 중인 크롤러 프로세스는 <b>그리드 세션</b> 탭에서 확인하실 수 있습니다.</p>
-</div>
-  
+<pre id="queue-status">Loading...</pre>
+
+<script>
+    async function fetchQueueStatus() {
+        try {
+            const response = await fetch('http://192.168.6.90:4000/crawler/status');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            document.getElementById('queue-status').textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            document.getElementById('queue-status').textContent = 'Failed to load queue status: ' + error;
+        }
+    }
+
+    // 주기적으로 큐 상태 업데이트 (1초마다)
+    setInterval(fetchQueueStatus, 1000);
+    fetchQueueStatus();
+</script>
+
 {% endblock %}
