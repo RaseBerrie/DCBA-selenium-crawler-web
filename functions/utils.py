@@ -1,5 +1,5 @@
 from main import db
-from functions.models import ResDefData, ResGitData, ListComp, ListRoot, ListSub, TagFile, TagExp
+from functions.models import ResDefData, ResGitData, ResCacheData, ListComp, ListRoot, ListSub, TagFile, TagExp
 
 def query_joiner(id, query, searchengine, git=False):
     if git: Data = ResGitData
@@ -31,18 +31,20 @@ def def_query(id, public, searchengine, git=False):
         query = db.session.query(ResGitData)
         result = query_joiner(id, query, searchengine, git=True)
     else:
-        query = db.session.query(ResDefData)
+        query = db.session.query(ResDefData, ResCacheData.url)
+        query = query.join(ResCacheData, ResCacheData.url == ResDefData.res_url, isouter=True)
         result = query_joiner(id, query, searchengine)
         
         if public: result = result.filter(ResDefData.tags != 'public')
 
     return result
         
-def file_query(id):
+def file_query(id, public):
     query = db.session.query(ResDefData, TagFile)\
         .join(TagFile, TagFile.id == ResDefData.id)
     result = query_joiner(id, query, searchengine="All")
 
+    if public: result = result.filter(TagFile.is_link == '0')
     return result
 
 def exp_query(id, searchengine):
@@ -54,25 +56,33 @@ def exp_query(id, searchengine):
     
 def data_fining(datas):
     result = []
-    for res_data in datas:
-        try:
-            line = res_data.ResDefData
-        except:
-            line = res_data
+    for data in datas:
+        try: def_data = data.ResDefData
+        except: def_data = data
+        
+        try: def_cache = data.url
+        except: def_cache = None
 
-        tmp = []
+        try: exp_data = data.TagExp
+        except: pass
 
-        if line.searchengine == "G": tmp.append("Google")
-        elif line.searchengine == "B": tmp.append("Bing")
+        tmp = list()
 
-        try: tmp.append(line.res_url.split("/")[2].split(":")[1])
+        if def_data.searchengine == "G": tmp.append("Google")
+        elif def_data.searchengine == "B": tmp.append("Bing")
+
+        try: tmp.append(def_data.res_url.split("/")[2].split(":")[1])
         except: tmp.append("default")
 
-        tmp.append(line.subdomain)
-        tmp.append(line.res_title)
-        tmp.append(line.res_url)
-        try: tmp.append(res_data.TagExp.exp_content)
-        except: tmp.append(line.res_content)
+        tmp.append(def_data.subdomain)
+        tmp.append(def_data.res_title)
+        tmp.append(def_data.res_url)
+
+        try: tmp.append(exp_data.exp_content)
+        except: tmp.append(def_data.res_content)
+
+        if def_cache is not None: tmp.append(1)
+        else: tmp.append(0)
         
         result.append(tmp)
     return result

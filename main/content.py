@@ -7,7 +7,7 @@ from io import BytesIO
 
 from main import *
 from functions.utils import def_query, file_query, exp_query, data_fining, file_fining
-from functions.models import ResDefData, ResGitData, ListComp, ListSub, ListRoot, TagExp, TagFile, ReqKeys
+from functions.models import ResDefData, ResGitData, ResCacheData, ListComp, ListSub, ListRoot, TagExp, TagFile, ReqKeys
 
 import pandas as pd
 
@@ -40,7 +40,7 @@ def main(sidemenu):
     offset = (page - 1) * per_page
 
     if sidemenu == "fileparse":
-        query = file_query(id)
+        query = file_query(id, status)
         if tag: query = query.filter(TagFile.filetype == tag)
 
     elif sidemenu == "gitsearch":
@@ -122,7 +122,7 @@ def result(sidemenu):
     offset = (page - 1) * per_page
 
     if sidemenu == "fileparse":
-        query = file_query(id)
+        query = file_query(id, status)
         if menu and key:
             query = query.filter(getattr(TagFile, menu).like(f'%{key}%'))
         if tag:
@@ -240,3 +240,11 @@ def dashboard():
                 data.append(tmp)
 
     return jsonify(data)
+
+@search.route('/cache', methods=['GET'])
+def findcache():
+    cache_url = request.args.get('url')
+    query = db.session.query(ResCacheData.cache).filter(ResCacheData.url == cache_url)
+
+    html_cache = query.one()
+    return html_cache[0].decode('utf-8')

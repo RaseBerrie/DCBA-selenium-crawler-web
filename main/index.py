@@ -10,7 +10,7 @@ index = Blueprint('index', __name__, template_folder='templates/frame')
 @index.route('/dashboard')
 def board():
     if request.cookies.get("status") is None:
-        cookie = {"crawler": False, "filter": False, "searchengine": "All"}
+        cookie = {"filter": False, "searchengine": "All"}
         resp = make_response(render_template('dashboard.html'))
 
         resp.set_cookie("status", parse.quote(json.dumps(cookie)))

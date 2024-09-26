@@ -7,8 +7,7 @@ class ListComp(db.Model):
     company = db.Column(db.String(50), nullable=False)
 
     def __repr__(self):
-        return f'''
-        <ListComp id={self.id} company={self.company}>'''
+        return f'<ListComp id={self.id} company={self.company}>'
     
 class ListRoot(db.Model):
     __tablename__ = 'list_rootdomain'
@@ -18,8 +17,7 @@ class ListRoot(db.Model):
     url = db.Column(db.String(50), nullable=False)
 
     def __repr__(self):
-        return f'''
-        <ListComp id={self.id} company={self.company} url={self.url}>'''
+        return f'<ListComp id={self.id} company={self.company} url={self.url}>'
     
 class ListSub(db.Model):
     __tablename__ = 'list_subdomain'
@@ -30,8 +28,7 @@ class ListSub(db.Model):
     is_root = db.Column(db.Integer, nullable=False, default=0)
 
     def __repr__(self):
-        return f'''
-        <ListComp id={self.id} rootdomain={self.rootdomain} url={self.url}, is_root={self.is_root}>'''
+        return f'<ListComp id={self.id} rootdomain={self.rootdomain} url={self.url}, is_root={self.is_root}>'
 
 class ResDefData(db.Model):
     __tablename__ = 'res_data_def'
@@ -46,8 +43,7 @@ class ResDefData(db.Model):
     update_time = db.Column(db.TIMESTAMP, nullable=False, server_default=db.func.current_timestamp())
 
     def __repr__(self):
-        return f'''
-        <ResDefData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain} tags={self.tags}
+        return f'''<ResDefData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain} tags={self.tags}
         res_title={self.res_title} res_url={self.res_url} res_content={self.res_content} update_time={self.update_time}>'''
     
 class ResGitData(db.Model):
@@ -62,23 +58,40 @@ class ResGitData(db.Model):
     update_time = db.Column(db.TIMESTAMP, nullable=False, server_default=db.func.current_timestamp())
 
     def __repr__(self):
-        return f'''
-        <ResGitData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain}
+        return f'''<ResGitData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain}
         res_title={self.res_title} res_url={self.res_url} res_content={self.res_content} update_time={self.update_time}>'''
-
     
+class ResCacheData(db.Model):
+    __tablename__ = 'res_data_cache'
+
+    url = db.Column(db.String(750), primary_key=True, nullable=False)
+    cache = db.Column(db.LargeBinary, nullable=True)
+
+    def __repr__(self):
+        return f'<ListComp url={self.url} cache={self.cache}>'
+
 class ReqKeys(db.Model):
     __tablename__ = 'req_keys'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     key = db.Column(db.String(50), nullable=False)
-    g_def = db.Column(db.Enum('notstarted', 'processing', 'finished', name='status_enum'), default='notstarted', nullable=False)
+    
     b_def = db.Column(db.Enum('notstarted', 'processing', 'finished', name='status_enum'), default='notstarted', nullable=False)
-    g_git = db.Column(db.Enum('notstarted', 'processing', 'finished', name='status_enum'), default='notstarted', nullable=False)
+    b_def_status = db.Column(db.Enum('none', 'running', 'killed', 'done', name='status_enum'), default='none', nullable=False)
+    
+    g_def = db.Column(db.Enum('notstarted', 'processing', 'finished', name='status_enum'), default='notstarted', nullable=False)
+    g_def_status = db.Column(db.Enum('none', 'running', 'killed', 'done', name='status_enum'), default='none', nullable=False)
+
     b_git = db.Column(db.Enum('notstarted', 'processing', 'finished', name='status_enum'), default='notstarted', nullable=False)
+    b_git_status = db.Column(db.Enum('none', 'running', 'killed', 'done', name='status_enum'), default='none', nullable=False)
+
+    g_git = db.Column(db.Enum('notstarted', 'processing', 'finished', name='status_enum'), default='notstarted', nullable=False)
+    g_git_status = db.Column(db.Enum('none', 'running', 'killed', 'done', name='status_enum'), default='none', nullable=False)
 
     def __repr__(self):
-        return f"<ReqKeys id={self.id} key={self.key} g_def={self.g_def} b_def={self.b_def} g_git={self.g_git} b_git={self.b_git}>"
+        return f'''<ReqKeys id={self.id} key={self.key}
+        b_def={self.b_def} b_def_status={self.b_def_status} g_def={self.g_def} g_def_status={self.g_def_status}
+        b_git={self.g_git} b_git_status={self.b_git} g_git={self.g_git} g_git_status={self.g_git_status}>'''
     
 class TagExp(db.Model):
     __tablename__ = 'res_tags_expose'
@@ -100,8 +113,8 @@ class TagFile(db.Model):
     title = db.Column(db.String(200))
     moddate = db.Column(db.TIMESTAMP)
     data = db.Column(db.Text)
+    is_link = db.Column(db.Integer)
 
     def __repr__(self):
-        return f'''
-        <TagFile id={self.id} url={self.url} filetype={self.filetype}
-        title={self.title} moddate={self.moddate} data={self.data}>'''
+        return f'''<TagFile id={self.id} url={self.url} filetype={self.filetype}
+        title={self.title} moddate={self.moddate} data={self.data} is_link={self.is_link}>'''
