@@ -1,28 +1,76 @@
-{% if not processing %}
-{% extends "crawler_index.html" %}
-{% endif %}
+<!-- eslint-disable -->
 
+{% extends "crawler_index.html" %}
 {% block crawler_html %}
 
-<pre id="queue-status">Loading...</pre>
+<div class="py-1" style="display: none;">
+    <span>Bing</span>
+    <span class="badge rounded-pill text-bg-secondary m-1">DEF</span>
+    <div class="progress">
+        <div id="b_def" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+    </div>
+</div>
+
+<div class="py-1" style="display: none;">
+    <span>구글</span>
+    <span class="badge rounded-pill text-bg-primary m-1">DEF</span>
+    <div class="progress">
+        <div id="g_def" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+    </div>
+</div>
+
+<div class="py-1" style="display: none;">
+    <span>Bing</span>
+    <span class="badge rounded-pill text-bg-secondary m-1">GIT</span>
+    <div class="progress">
+        <div id="b_git" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+    </div>
+</div>    
+
+<div class="py-1" style="display: none;">
+    <span>구글</span>
+    <span class="badge rounded-pill text-bg-primary m-1">GIT</span>
+    <div class="progress">
+        <div id="g_git" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+    </div>
+</div>
+
+<button id="restart" class="btn btn-outline-danger mt-4">
+    ⚠️ 종료 후 처음으로 돌아가기
+</button>
 
 <script>
-    async function fetchQueueStatus() {
-        try {
-            const response = await fetch('http://192.168.6.90:4000/crawler/status');
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+    function crawlerInprogress() {
+        $.get('process', function(data) {
+            parsed_data = JSON.parse(data)
+            for (var i = 0; i < 4; i++) {
+                var key = Object.keys(parsed_data)[i]
+                
+                if (parsed_data[key] == "killed") {
+                    $('#' + key).parents('.py-1').show()
+                    $('#' + key).css("width", "100%")
+                    $('#' + key).text("오류와 함께 완료되었습니다.")
+                    $('#' + key).removeClass("progress-bar-striped progress-bar-animated").addClass("bg-danger")
+                } else if (parsed_data[key] >= 0) {
+                    $('#' + key).parents('.py-1').show()
+                    $('#' + key).css("width", parsed_data[key] + "%")
+                    $('#' + key).text(parsed_data[key] + "%")
+                }
             }
-            const data = await response.json();
-            document.getElementById('queue-status').textContent = JSON.stringify(data, null, 2);
-        } catch (error) {
-            document.getElementById('queue-status').textContent = 'Failed to load queue status: ' + error;
-        }
+        });
+        setTimeout(crawlerInprogress, 3000);
     }
 
-    // 주기적으로 큐 상태 업데이트 (1초마다)
-    setInterval(fetchQueueStatus, 1000);
-    fetchQueueStatus();
+    crawlerInprogress();
+    $("#restart").on("click", function() {
+        fetch('http://127.0.0.1:5000/crawler/finish', {
+            method: 'GET',
+        })
+        .catch(error => { console.error('Error:', error); })
+        .finally(() => {
+            location.reload();
+        });
+    });
 </script>
 
 {% endblock %}

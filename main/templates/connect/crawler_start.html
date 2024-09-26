@@ -34,6 +34,7 @@
 
 <script>
 $("#start-crawl").on("click", function() {
+    setTimeout( () => {location.reload();}, 1000);
     $.ajax({
         type: "GET",
         dataType: "json",
@@ -45,9 +46,6 @@ $("#start-crawl").on("click", function() {
                 "b_git": $('#b_git').is(':checked'),
                 "g_git": $('#g_git').is(':checked')
             }),
-        },
-        success: function(data) {
-            console.log('데이터:', data.status);
         }
     })
 });

@@ -9,7 +9,14 @@
         <span id="count-result" style="display: none;">{{ count }}</span>    
     </td>
     <td class="text-truncate">
-        <a href="{{ data[4] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
+        {% if data[6] == 1 %}
+            <button class="cache-btn btn btn-outline-primary"
+                    style="--bs-btn-padding-y: .05rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;"
+                    link="{{ data[4] }}">
+                    캐시됨
+            </button>
+        {% endif %}
+        <a href="{{ data[4] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[4] }}">
             {{ data[4] }}
         </a>
     </td>
@@ -32,3 +39,28 @@
     </td>
 </tr>
 {% endfor %}
+
+<script>
+$(document).ready(function() {
+    $('.cache-btn').click(function() {
+        const cacheUrl = $(this).attr('link')
+        $.ajax({
+            url: '/cache',
+            type: 'GET',
+            data: { 'url': cacheUrl },
+            success: function(data) {
+                openBlobData(data);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error:', textStatus, errorThrown);
+            }
+        });
+    });
+
+    function openBlobData(blobData) {
+        const newWindow = window.open();
+        newWindow.document.write(`${blobData}`);
+        newWindow.document.close();
+    }
+});
+</script>

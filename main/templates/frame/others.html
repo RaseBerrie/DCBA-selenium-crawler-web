@@ -15,6 +15,9 @@
                     <p style="display: inline;">데이터 자동 분류</p>
                     <a class="icon-link icon-link-hover link-primary link-underline-primary link-underline-opacity-25" id="data-classify" href="#">
                         시작 <svg class="bi" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></svg>
+                        <div class="spinner-grow spinner-grow-sm" id="loading-1-1" style="display: none;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
                     </a>
                 </div>
             </div>
@@ -31,7 +34,7 @@
             </div>
         </li>
     </ol>
-<hr style="visibility: hidden;">
+    <!-- <hr style="visibility: hidden;">
     <h5><b>크롤러 설정</b></h5>
     <ol class="list-group list-group-numbered">
         <li class="list-group-item d-flex justify-content-between align-items-start">
@@ -45,20 +48,26 @@
                 </div>
             </div>
         </li>
-    </ol>
+    </ol> -->
 </div>
 
 <script>
 $(".nav-wrapper .nav-tabs").hide();
 
 $("#data-classify").on("click", function() {
+    $('#loading-1-1').show()
     $.ajax({
         type: "GET",
-        dataType: "jsonp",
-        jsonp: "callback",
         url: "http://192.168.6.90:4000/data/classify",
         success: function(data) {
             console.log('데이터:', data.status);
+            if (data.status == 'success') {
+                $('#loading-1-1').hide();
+                setTimeout(function() { alert("데이터 자동 분류가 완료되었습니다.") }, 100);
+            } else {
+                $('#loading-1-1').hide();
+                setTimeout(function() { alert("분류 과정에서 서버 에러가 발생했습니다.") }, 100);
+            }
         }
     })
 });
@@ -66,8 +75,6 @@ $("#data-classify").on("click", function() {
 $("#file-title").on("click", function() {
     $.ajax({
         type: "GET",
-        dataType: "jsonp",
-        jsonp: "callback",
         url: "http://192.168.6.90:4000/data/file",
         success: function(data) {
             console.log('데이터:', data.status);

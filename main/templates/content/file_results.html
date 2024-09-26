@@ -2,17 +2,21 @@
 <tr>
     <td class="bg-light" style = "text-align: center;">{{ (page - 1) * 15 + i + 1 }}</td>
     <td style = "text-align: center; word-break: keep-all; font-weight: 700;">
-    {% if data[2] == 'PDF' %}
-        {{ data[2] }}
-    {% elif data[2] == 'XLSX' %}
-        <span style = "color: green;">{{ data[2] }}</span>
-    {% elif data[2] == 'PPTX' %}
-        <span style = "color: firebrick;">{{ data[2] }}</span>
-    {% elif data[2] == 'DOCX' %}
-        <span style = "color: steelblue;">{{ data[2] }}</span>
+    {% if data[3] == 'PDF' %}
+        {{ data[3] }}
+    {% elif data[3] == 'XLSX' %}
+        <span style = "color: green;">{{ data[3] }}</span>
+    {% elif data[3] == 'PPTX' %}
+        <span style = "color: firebrick;">{{ data[3] }}</span>
+    {% elif data[3] == 'DOCX' %}
+        <span style = "color: steelblue;">{{ data[3] }}</span>
     {% else %}
-        {% set others = data[5].split('.') %}
-        <span style = "color: darkslateblue;">{{ others[-1].upper() }}</span>
+        {% set others = data[5].split('.')[-1] %}
+        {% if (others|length > 4 or others|length < 2) or others == 'do' %}
+            <p class="fst-italic my-0" style="font-weight: 400;">링크</p>
+        {% else %}
+            <span style = "color: darkslateblue;">{{ others.upper() }}</span>
+        {% endif %}
     {% endif %}
     </td>
     <td class = "text-truncate">
@@ -20,7 +24,7 @@
         {{ data[4] }}
     </td>
     <td class = "text-truncate">
-        <a href="{{ data[5] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[3] }}">
+        <a href="{{ data[5] }}" class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" rel="noopener noreferrer" title="{{ data[5] }}">
             {{ data[5] }}
         </a>
         <span id="count-result" style="display: none;">{{ count }}</span>

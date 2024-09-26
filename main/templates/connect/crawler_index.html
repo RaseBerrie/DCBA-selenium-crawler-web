@@ -6,48 +6,48 @@
 </div>
 
 <div class="body-container pt-2">
-  <nav>
-    <div class="nav nav-underline px-1" id="nav-tab" role="tablist">
-      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#crawler" type="button" role="tab" aria-controls="nav-home" aria-selected="true">
-        크롤러
-      </button>
-      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#addtarget" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">
-        검색 대상 추가
-      </button>
-      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#selenium" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">
-        그리드 세션
-      </button>
+    <nav>
+        <div class="nav nav-underline px-1" id="nav-tab" role="tablist">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#crawler" type="button" role="tab" aria-controls="nav-home" aria-selected="true">
+                크롤러
+            </button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#addtarget" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">
+                검색 대상 추가
+            </button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#selenium" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">
+                그리드 세션
+            </button>
+        </div>
+    </nav>
+    <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="crawler" role="tabpanel" tabindex="0">
+            <br/>
+            <div id="tab-one-button" class="container d-grid col-6 mx-auto">
+                {% block crawler_html %}{% endblock %}
+            </div>
+            <br/>
+            <div id="tab-one-table">
+                {% include 'tab_one.html' %}
+            </div>
+        </div>
+        <div class="tab-pane fade" id="addtarget" role="tabpanel" tabindex="0">
+            <div class="d-grid col-8 mx-auto py-2">
+                {% include 'tab_two.html' %}
+            </div>
+        </div>
+        <div class="tab-pane fade" id="selenium" role="tabpanel" tabindex="0" style="text-align: center;">
+            <div class="ratio ratio-21x9">
+                <iframe src="http://192.168.6.90:4444/#/sessions" style="padding-top: 1rem; border: none;" allowfullscreen></iframe>
+            </div>
+        </div>
     </div>
-  </nav>
-  <div class="tab-content" id="nav-tabContent">
-    <div class="tab-pane fade show active" id="crawler" role="tabpanel" tabindex="0">
-      <br/>
-      <div id="tab-one-button" class="container d-grid col-6 mx-auto">
-        {% block crawler_html %}{% endblock %}
-      </div>
-      <br/>
-      <div id="tab-one-table">
-      {% include 'tab_one.html' %}
-      </div>
-    </div>
-    <div class="tab-pane fade" id="addtarget" role="tabpanel" tabindex="0">
-      <div class="d-grid col-8 mx-auto py-2">
-        {% include 'tab_two.html' %}
-      </div>
-    </div>
-    <div class="tab-pane fade" id="selenium" role="tabpanel" tabindex="0" style="text-align: center;">
-      <div class="ratio ratio-21x9">
-        <iframe src="http://192.168.6.90:4444/#/sessions" style="padding-top: 1rem; border: none;" allowfullscreen></iframe>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>  
-$(".nav-wrapper .nav-tabs").hide();
+    $(".nav-wrapper .nav-tabs").hide();
 
-$.get("/crawler/table", function(data) {
-  $("#tab-one-table").load(location.href + "/table");
-});
+    $.get("/crawler/table", function(data) {
+        $("#tab-one-table").load("/crawler/table");
+    });
 </script>
 {% endblock %}
