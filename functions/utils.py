@@ -30,6 +30,8 @@ def def_query(id, public, searchengine, git=False):
     if git:
         query = db.session.query(ResGitData)
         result = query_joiner(id, query, searchengine, git=True)
+
+        if public: result = result.filter(ResGitData.filtered == 1)
     else:
         query = db.session.query(ResDefData, ResCacheData.url)
         query = query.join(ResCacheData, ResCacheData.url == ResDefData.res_url, isouter=True)

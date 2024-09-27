@@ -217,7 +217,7 @@ function loadResult(queryed) {
 
 function loadContent() {
     if(pagename.substr(1) == 'expose' || pagename == '/fileparse') $('.btn-group').removeClass('d-none');
-    if(pagename == '/content') $('#public-filter').removeClass('d-none');
+    if(pagename == '/content' || pagename == '/gitsearch') $('#public-filter').removeClass('d-none');
 
     var cookie = JSON.parse($.cookie('status'));
     $('#' + pagename.substr(1)).addClass("selected");
@@ -655,4 +655,31 @@ function downloadButton(pagename) {
         }
         window.location.href = downloadUrl;
     });
+}
+
+
+/*  =====================================================
+    ==                  RUN CRAWLER                    ==
+    =====================================================   */
+
+
+function crawlerInprogress() {
+    $.get('process', function(data) {
+        parsed_data = JSON.parse(data)
+        for (var i = 0; i < 4; i++) {
+            var key = Object.keys(parsed_data)[i]
+            
+            if (parsed_data[key] == "killed") {
+                $('#' + key).parents('.py-1').show()
+                $('#' + key).css("width", "100%")
+                $('#' + key).text("이 프로세스는 강제로 종료되었습니다.")
+                $('#' + key).removeClass("progress-bar-striped progress-bar-animated").addClass("bg-danger")
+            } else if (parsed_data[key] >= 0) {
+                $('#' + key).parents('.py-1').show()
+                $('#' + key).css("width", parsed_data[key] + "%")
+                $('#' + key).text(parsed_data[key] + "%")
+            }
+        }
+    });
+    setTimeout(crawlerInprogress, 3000);
 }

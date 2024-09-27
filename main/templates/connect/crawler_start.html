@@ -1,7 +1,16 @@
 {% extends "crawler_index.html" %}
 {% block crawler_html %}
 
-<div class="container row row-cols-2">
+<div class="alert alert-primary" role="alert">
+    <h5 class="alert-heading">크롤러 작동 중이 아닙니다.</h5>
+    <p>마지막 세션이 종료된 후로 {{ time_diff[-3] }}시간 {{ time_diff[-2] }}분 지났습니다.</p>
+    <hr>
+    <p class="mb-0">
+        <b>Bing 종료 시각</b> {{ bing_data }}, <b>Google 종료 시각</b> {{ google_data }}
+    </p>
+  </div>
+
+<div class="container row row-cols-2 mx-auto">
 
     <div class="col col-8 my-auto"> <div class="row">
         <div class="form-check form-check-inline col">

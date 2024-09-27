@@ -52,13 +52,14 @@ class ResGitData(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     searchengine = db.Column(db.String(1), nullable=False)
     subdomain = db.Column(db.String(50), nullable=False)
+    filtered = db.Column(db.Integer, nullable=False)
     res_title = db.Column(db.String(100), nullable=False)
     res_url = db.Column(db.Text, nullable=False)
     res_content = db.Column(db.Text)
     update_time = db.Column(db.TIMESTAMP, nullable=False, server_default=db.func.current_timestamp())
 
     def __repr__(self):
-        return f'''<ResGitData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain}
+        return f'''<ResGitData id={self.id} searchengine={self.searchengine} subdomain={self.subdomain} filtered={self.filtered}
         res_title={self.res_title} res_url={self.res_url} res_content={self.res_content} update_time={self.update_time}>'''
     
 class ResCacheData(db.Model):
@@ -118,3 +119,12 @@ class TagFile(db.Model):
     def __repr__(self):
         return f'''<TagFile id={self.id} url={self.url} filetype={self.filetype}
         title={self.title} moddate={self.moddate} data={self.data} is_link={self.is_link}>'''
+    
+class ReqStat(db.Model):
+    __tablename__ = 'req_status'
+    
+    searchengine = db.Column(db.String(6), primary_key=True)
+    last_request = db.Column(db.DATETIME(timezone=True))
+
+    def __repr__(self):
+        return f'<ReqStat searchengine={self.searchengine} last_request={self.last_request}>'

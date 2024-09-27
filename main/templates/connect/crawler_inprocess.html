@@ -40,37 +40,16 @@
 </button>
 
 <script>
-    function crawlerInprogress() {
-        $.get('process', function(data) {
-            parsed_data = JSON.parse(data)
-            for (var i = 0; i < 4; i++) {
-                var key = Object.keys(parsed_data)[i]
-                
-                if (parsed_data[key] == "killed") {
-                    $('#' + key).parents('.py-1').show()
-                    $('#' + key).css("width", "100%")
-                    $('#' + key).text("오류와 함께 완료되었습니다.")
-                    $('#' + key).removeClass("progress-bar-striped progress-bar-animated").addClass("bg-danger")
-                } else if (parsed_data[key] >= 0) {
-                    $('#' + key).parents('.py-1').show()
-                    $('#' + key).css("width", parsed_data[key] + "%")
-                    $('#' + key).text(parsed_data[key] + "%")
-                }
-            }
-        });
-        setTimeout(crawlerInprogress, 3000);
-    }
-
-    crawlerInprogress();
-    $("#restart").on("click", function() {
-        fetch('http://127.0.0.1:5000/crawler/finish', {
-            method: 'GET',
-        })
-        .catch(error => { console.error('Error:', error); })
-        .finally(() => {
-            location.reload();
-        });
+crawlerInprogress();
+$("#restart").on("click", function() {
+    fetch('http://127.0.0.1:5000/crawler/finish', {
+        method: 'GET',
+    })
+    .catch(error => { console.error('Error:', error); })
+    .finally(() => {
+        location.reload();
     });
+});
 </script>
 
 {% endblock %}

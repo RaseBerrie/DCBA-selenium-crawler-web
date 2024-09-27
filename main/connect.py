@@ -1,8 +1,10 @@
 from main import *
 from flask import Blueprint, render_template, jsonify
 
-from functions.models import ReqKeys, ListSub, ListRoot
+from functions.models import ReqKeys, ReqStat, ListSub, ListRoot
 from sqlalchemy import func, desc, and_, or_
+from datetime import datetime
+
 import json
 
 crawler = Blueprint('crawler', __name__, template_folder='templates/connect', url_prefix="/crawler")
@@ -15,7 +17,14 @@ def main():
                       ReqKeys.g_def_status == "none", ReqKeys.g_git_status == "none"))
     count = query.count()
     if count == 0:
-        return render_template('crawler_start.html')
+        data = db.session.query(ReqStat).all()
+        
+        google_data, bing_data = data[0].last_request, data[1].last_request
+        now = datetime.now()        
+        td = min(now-google_data, now-bing_data)
+
+        return render_template('crawler_start.html', time_diff = str(td).split(':'),
+                               google_data = google_data, bing_data = bing_data)
     else:
         return render_template('crawler_inprocess.html')
 
