@@ -11,6 +11,9 @@
     <div class="alert alert-success mt-3" id="success" role="alert" style="display: none;">
         업로드 성공
     </div>
+    <div class="alert alert-danger mt-3" id="fail" role="alert" style="display: none;">
+        업로드 실패
+    </div>
 
     <li class="list-group-item d-flex justify-content-between align-items-start px-0 pb-3">
         <div class="ms-2 me-auto flex-fill">
@@ -30,7 +33,7 @@
                     <input class="form-check-input me-3 align-self-center" type="radio" name="listGroupRadio" value="" id="firstradio" checked>
                     <div class="input-group">
                         <span class="input-group-text">CSV 파일 업로드</span>
-                        <input type="file" accept="text/csv" class="form-control" id="csv-input">
+                        <input type="file" accept="text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="form-control" id="csv-input">
                     </div>
                 </li>
 
@@ -96,8 +99,13 @@ $('#upload').on('click', function(event) {
             processData: false,
             contentType: false
         }).done((data)=>{
-            $('#success').show().siblings('.alert').hide();
-            setTimeout(function() { $('#success').hide(); }, 3000);
+            if (data.status == "success") {
+                $('#success').show().siblings('.alert').hide();
+                setTimeout(function() { $('#success').hide(); }, 3000);
+            } else {
+                $('#fail').show().siblings('.alert').hide();
+                setTimeout(function() { $('#fail').hide(); }, 3000);
+            }
         });
 
     // 링크 업로드
@@ -124,8 +132,13 @@ $('#upload').on('click', function(event) {
                 "data": data
             },
         }).done((data)=>{    
-            $('#success').show().siblings('.alert').hide();
-            setTimeout(function() { $('#success').hide(); }, 3000);
+            if (data.status == "success") {
+                $('#success').show().siblings('.alert').hide();
+                setTimeout(function() { $('#success').hide(); }, 3000);
+            } else {
+                $('#fail').show().siblings('.alert').hide();
+                setTimeout(function() { $('#fail').hide(); }, 3000);
+            }
         });
     }
 });

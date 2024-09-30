@@ -1,26 +1,21 @@
 from main import db
 from functions.models import ResDefData, ResGitData, ResCacheData, ListComp, ListRoot, ListSub, TagFile, TagExp
+from urllib.parse import urlparse
 
 def query_joiner(id, query, searchengine, git=False):
-    if git: Data = ResGitData
-    else: Data = ResDefData
+    Data = ResGitData if git else ResDefData
 
-    if id["comp"][0] == 0:
-        result = query
-
-    elif id["root"][0] == 0:
-        result = query.join(ListSub, ListSub.url == Data.subdomain)\
-            .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
-                .join(ListComp, ListComp.company == ListRoot.company)\
-                    .filter(ListComp.id == id["comp"][0])
-    elif id["sub"][0] == 0:
-        result = query.join(ListSub, ListSub.url == Data.subdomain)\
-            .join(ListRoot, ListRoot.url == ListSub.rootdomain)\
-                .filter(ListRoot.id == id["root"][0])
+    if id["comp"][0] == 0: result = query
     else:
-        result = query.join(ListSub, ListSub.url == Data.subdomain)\
-            .filter(ListSub.id == id["sub"][0])
-    
+        result = query.join(ListSub, ListSub.url == Data.subdomain)
+        if id["sub"][0] != 0: result = result.filter(ListSub.id == id["sub"][0])
+        else:
+            result = result.join(ListRoot, ListRoot.url == ListSub.rootdomain)
+            if id["root"][0] != 0: result = result.filter(ListRoot.id == id["root"][0])
+            else:
+                result = result.join(ListComp, ListComp.company == ListRoot.company)
+                if id["comp"][0] != 0: result = result.filter(ListComp.id == id["comp"][0])
+        
     if searchengine != "All":
         result = result.filter(Data.searchengine == searchengine)
 
@@ -59,46 +54,46 @@ def exp_query(id, searchengine):
 def data_fining(datas):
     result = []
     for data in datas:
-        try: def_data = data.ResDefData
-        except: def_data = data
+        def_data = getattr(data, 'ResDefData', data)
+        def_cache = getattr(data, 'url', None)
+        exp_data = getattr(data, 'TagExp', None)
         
-        try: def_cache = data.url
-        except: def_cache = None
-
-        try: exp_data = data.TagExp
-        except: pass
-
-        tmp = list()
-
-        if def_data.searchengine == "G": tmp.append("Google")
-        elif def_data.searchengine == "B": tmp.append("Bing")
-
-        try: tmp.append(def_data.res_url.split("/")[2].split(":")[1])
-        except: tmp.append("default")
+        tmp = []
+        tmp.append("Google" if def_data.searchengine == "G"
+                else "Bing" if def_data.searchengine == "B"
+                else "default")
+        try:
+            parsed_url = urlparse(def_data.res_url)
+            port = parsed_url.port if parsed_url.port else "default"
+            tmp.append(f"{port}")
+        except:
+            tmp.append("default")
 
         tmp.append(def_data.subdomain)
         tmp.append(def_data.res_title)
         tmp.append(def_data.res_url)
 
-        try: tmp.append(exp_data.exp_content)
-        except: tmp.append(def_data.res_content)
+        tmp.append(exp_data.exp_content if exp_data else def_data.res_content)
+        tmp.append(1 if def_cache is not None else 0)
 
-        if def_cache is not None: tmp.append(1)
-        else: tmp.append(0)
-        
         result.append(tmp)
+
     return result
 
 def file_fining(datas):
     result = []
+
     for line in datas:
         tmp = []
-
-        if line.ResDefData.searchengine == "G": tmp.append("Google")
-        elif line.ResDefData.searchengine == "B": tmp.append("Bing")
-        
-        try: tmp.append(line.TagFile.url.split("/")[2].split(":")[1])
-        except: tmp.append("default")
+        tmp.append("Google" if line.ResDefData.searchengine == "G"
+                else "Bing" if line.ResDefData.searchengine == "B"
+                else "default")
+        try:
+            parsed_url = urlparse(line.TagFile.url)
+            port = parsed_url.port if parsed_url.port else "default"
+            tmp.append(f"{port}")
+        except:
+            tmp.append("default")
 
         tmp.append(line.ResDefData.subdomain)
         tmp.append(line.TagFile.filetype.upper())
@@ -107,4 +102,5 @@ def file_fining(datas):
         tmp.append("None")
 
         result.append(tmp)
+
     return result

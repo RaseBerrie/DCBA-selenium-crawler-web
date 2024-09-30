@@ -72,6 +72,7 @@ def main(sidemenu):
         else:
             head = ["SearchEngine", "Port", "Subdomain", "Title", "URL", "Contents"]
             result = data_fining(data)
+            result = [child[:-1] for child in result]
 
         output_stream = BytesIO()
         df = pd.DataFrame(result, columns=head)

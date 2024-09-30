@@ -23,8 +23,8 @@ def main():
         now = datetime.now()        
         td = min(now-google_data, now-bing_data)
 
-        return render_template('crawler_start.html', time_diff = str(td).split(':'),
-                               google_data = google_data, bing_data = bing_data)
+        return render_template('crawler_start.html', google_data = google_data, bing_data = bing_data,
+                               time_diff = str(td).replace(' day,', '일').replace(' days,', '일').split(':'))
     else:
         return render_template('crawler_inprocess.html')
 
@@ -32,7 +32,7 @@ def main():
 def reload():
     query = db.session.query(ReqKeys, ListRoot)
     query = query.join(ListSub, ListSub.url == ReqKeys.key)\
-        .join(ListRoot, ListRoot.url == ListSub.rootdomain)
+                 .join(ListRoot, ListRoot.url == ListSub.rootdomain)
     datas = query.order_by(desc(ReqKeys.id))
 
     return render_template('tab_one.html', datas=datas)
@@ -50,11 +50,11 @@ def processor():
             notstarted_condition = and_(getattr(ReqKeys, key) == "notstarted", getattr(ReqKeys, key + "_status") == "killed")
 
             numerator_subquery = db.session.query(func.count(ReqKeys.id).label("numerator"))\
-                .filter(or_(finished_condition, notstarted_condition)).scalar_subquery()
+                                           .filter(or_(finished_condition, notstarted_condition)).scalar_subquery()
             
             denominator_subquery = db.session.query(func.count(ReqKeys.id).label("denominator"))\
-                .filter((getattr(ReqKeys, key + "_status") != "none"))\
-                .scalar_subquery()
+                                             .filter((getattr(ReqKeys, key + "_status") != "none"))\
+                                             .scalar_subquery()
             
             ratio_query = db.session.query(func.coalesce(numerator_subquery / func.nullif(denominator_subquery, 0), -1))
             ratio = db.session.execute(ratio_query).scalar()
