@@ -59,9 +59,9 @@ def data_fining(datas):
         exp_data = getattr(data, 'TagExp', None)
         
         tmp = []
-        tmp.append("Google" if def_data.searchengine == "G"
-                else "Bing" if def_data.searchengine == "B"
-                else "default")
+        tmp.append("Google" if def_data.searchengine in ["G", "g"] 
+                   else "Bing" if def_data.searchengine in ["B", "b"]
+                   else None)
         try:
             parsed_url = urlparse(def_data.res_url)
             port = parsed_url.port if parsed_url.port else "default"
